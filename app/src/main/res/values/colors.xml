@@ -5,4 +5,5 @@
     <color name="unselected_icon_color">#DBDBDB</color>
     <color name="selected_icon_color">#1FFF1B</color>
     <color name="background_color">#171A1F</color>
+    <color name="point_color">#1fff1b</color>
 </resources>
