@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="unselected_icon_color">#DBDBDB</color>
+    <color name="selected_icon_color">#1FFF1B</color>
 </resources>
