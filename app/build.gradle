@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'com.example.dou'
-    compileSdk 33
+    compileSdk 34
 
     defaultConfig {
         applicationId "com.example.dou"
@@ -30,9 +30,15 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+    }
 }
 
 dependencies {
+    implementation 'androidx.fragment:fragment:1.6.2'
+
     // BottomNavigation
     def nav_version = "2.7.7"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
