@@ -1,14 +1,213 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/background_color"
+    android:orientation="vertical"
+    android:padding="30dp"
     tools:context=".UserFragment">
 
-    <!-- TODO: Update blank fragment layout -->
     <TextView
+        android:id="@+id/user_title"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/promptbold"
+        android:text="DOU"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="30dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"></TextView>
 
-</FrameLayout>
+    <TextView
+        android:id="@+id/user_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="조이"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toTopOf="@id/user_des3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/user_title"></TextView>
+
+    <TextView
+        android:id="@+id/user_des2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="님"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toTopOf="@id/user_des3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toEndOf="@id/user_name"
+        app:layout_constraintTop_toBottomOf="@id/user_title"
+        app:layout_constraintVertical_bias="0.0"></TextView>
+
+    <TextView
+        android:id="@+id/user_des3"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="도우와 함께하는 하루는 어떠신가요?"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/user_name"></TextView>
+
+    <ImageView
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/line"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/user_des3" />
+
+    <TextView
+        android:id="@+id/day_dou"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginTop="30dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="DOU와 "
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/day_dou2"
+        app:layout_constraintEnd_toStartOf="@id/day_dou2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/line" />
+
+    <TextView
+        android:id="@+id/day_dou2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="12일"
+        android:textColor="@color/point_color"
+        android:textSize="25dp"
+        app:layout_constraintEnd_toStartOf="@id/day_dou3"
+        app:layout_constraintStart_toEndOf="@id/day_dou"
+        app:layout_constraintTop_toBottomOf="@id/line" />
+
+    <TextView
+        android:id="@+id/day_dou3"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginTop="30dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text=" 동안 함께했어요"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/day_dou2"
+        app:layout_constraintStart_toEndOf="@+id/day_dou2"
+        app:layout_constraintTop_toBottomOf="@id/line" />
+
+
+    <TextView
+        android:id="@+id/time_dou"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="DOU와 "
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/time_dou2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/day_dou" />
+
+    <TextView
+        android:id="@+id/time_dou2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text="25시간"
+        android:textColor="@color/point_color"
+        android:textSize="25dp"
+        app:layout_constraintEnd_toStartOf="@id/time_dou3"
+        app:layout_constraintStart_toEndOf="@id/time_dou"
+        app:layout_constraintTop_toBottomOf="@id/day_dou2" />
+
+    <TextView
+        android:id="@+id/time_dou3"
+        android:layout_width="wrap_content"
+        android:layout_height="25dp"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/pretendardextrabold"
+        android:text=" 동안 대화했어요"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="@+id/time_dou2"
+        app:layout_constraintStart_toEndOf="@+id/time_dou2"
+        app:layout_constraintTop_toBottomOf="@id/day_dou3" />
+
+    <Button
+        android:id="@+id/user_test"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_custom"
+        android:fontFamily="@font/pretendardextrabold"
+        android:padding="10dp"
+        android:text="회복 탄력성 테스트하러 가기"
+        android:textColor="@color/white"
+        android:textSize="20dp"
+        app:backgroundTint="#56585C"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/logout_layout"
+        />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:paddingTop="10dp"
+        android:id="@+id/logout_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/logout_txt"
+            android:layout_marginEnd="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/pretendardmedium"
+            android:text="로그아웃 하시겠습니까?"
+            android:textColor="@color/white"
+            android:textSize="15dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/logout_btn"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/logout_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:fontFamily="@font/pretendardmedium"
+            android:text="로그아웃하기"
+            android:textColor="@color/point_color"
+            android:textSize="15dp"
+            app:layout_constraintStart_toEndOf="@id/logout_txt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
