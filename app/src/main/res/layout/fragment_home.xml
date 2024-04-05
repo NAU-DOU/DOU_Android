@@ -52,28 +52,156 @@
             android:layout_width="130dp"
             android:layout_height="120dp"
             android:clickable="true"
-
             android:src="@drawable/home_record"
-            app:layout_constraintBottom_toTopOf="@id/record_des"
+            app:layout_constraintBottom_toTopOf="@id/record_des_layout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.501"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"></ImageView>
 
-        <TextView
-            android:id="@+id/record_des"
-            android:layout_marginTop="20dp"
-            app:layout_constraintTop_toBottomOf="@id/home_record"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toTopOf="@id/record_des"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/record_des_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="나를 누르면 이야기를 시작할 수 있어!"
-            android:fontFamily="@font/pretendardextrabold"
-            android:textColor="@color/white"
-            android:textSize="20dp">
-        </TextView>
+            app:layout_constraintTop_toBottomOf="@id/home_record"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:visibility="visible"
+                android:id="@+id/record_des_layout_first"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:id="@+id/record_des"
+                    android:layout_marginTop="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="나를 누르면 이야기를 "
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/white"
+                    android:textSize="20dp">
+                </TextView>
+
+                <TextView
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/record_des"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:id="@+id/record_des1"
+                    android:layout_marginTop="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="시작"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/point_color"
+                    android:textSize="20dp">
+                </TextView>
+
+                <TextView
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toEndOf="@id/record_des1"
+                    android:id="@+id/record_des2"
+                    android:layout_marginTop="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="할 수 있어!"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/white"
+                    android:textSize="20dp">
+                </TextView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:visibility="invisible"
+                android:id="@+id/record_des_layout1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                >
+
+                <TextView
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:id="@+id/record_des4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="~나랑 대화중 ~"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/point_color"
+                    android:textSize="20dp">
+                </TextView>
+
+                <TextView
+                    app:layout_constraintTop_toBottomOf="@id/record_des4"
+                    android:id="@+id/record_des5"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="다시 누르면 녹음을 멈출 수 있어!"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/white"
+                    android:textSize="20dp">
+                </TextView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:visibility="invisible"
+                android:id="@+id/record_des_layout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                >
+
+                <TextView
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:id="@+id/record_des6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="오늘의 감정 기록을 완료했어!"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/point_color"
+                    android:textSize="20dp">
+                </TextView>
+
+                <TextView
+                    app:layout_constraintTop_toBottomOf="@id/record_des6"
+                    android:id="@+id/record_des7"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="너의 감정 기록을 보러갈래?"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/white"
+                    android:textSize="20dp">
+                </TextView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <Button
             android:visibility="invisible"
@@ -81,7 +209,7 @@
             android:id="@+id/record_fin"
             android:layout_marginTop="20dp"
             app:backgroundTint="#56585C"
-            app:layout_constraintTop_toBottomOf="@id/record_des"
+            app:layout_constraintTop_toBottomOf="@id/record_des_layout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -100,7 +228,7 @@
             android:id="@+id/record_see"
             android:layout_marginTop="20dp"
             app:backgroundTint="#56585C"
-            app:layout_constraintTop_toBottomOf="@id/record_des"
+            app:layout_constraintTop_toBottomOf="@id/record_des_layout"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
