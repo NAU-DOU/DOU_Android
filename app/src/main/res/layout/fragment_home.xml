@@ -74,7 +74,9 @@
             android:textColor="@color/white"
             android:textSize="20dp">
         </TextView>
+
         <Button
+            android:visibility="invisible"
             android:background="@drawable/button_custom"
             android:id="@+id/record_fin"
             android:layout_marginTop="20dp"
@@ -90,7 +92,25 @@
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/white"
             android:textSize="20dp">
+        </Button>
 
+        <Button
+            android:visibility="invisible"
+            android:background="@drawable/button_custom"
+            android:id="@+id/record_see"
+            android:layout_marginTop="20dp"
+            app:backgroundTint="#56585C"
+            app:layout_constraintTop_toBottomOf="@id/record_des"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="감정기록 보러가기"
+            android:padding="10dp"
+            android:fontFamily="@font/pretendardextrabold"
+            android:textColor="@color/white"
+            android:textSize="20dp">
         </Button>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
