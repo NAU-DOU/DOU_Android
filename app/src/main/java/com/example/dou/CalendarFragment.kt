@@ -10,11 +10,12 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.FragmentCalendarBinding
 import com.example.dou.databinding.FragmentListBinding
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import java.util.Calendar
 
 class CalendarFragment : Fragment() {
     private lateinit var binding: FragmentCalendarBinding
-    //private val calItem = arrayListOf<CalItem>()
+    private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,10 +47,20 @@ class CalendarFragment : Fragment() {
         val calAdapter = CalAdapter(calItems) { position ->
             // 클릭한 아이템의 위치(position)를 받아서 처리합니다.
             Log.d("CalendarFragment", "Clicked item position: $position")
+            openBottomSheet()
         }
 
         binding.calRecycler.layoutManager = GridLayoutManager(context, 7)
         binding.calRecycler.adapter = calAdapter
+
+        // BottomSheet 설정
+        bottomSheetBehavior = BottomSheetBehavior.from(binding.emotionTitleLayout)
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN // 초기에는 숨김 상태로 설정
+
+        // BottomSheet 토글 버튼 클릭 이벤트 처리
+        binding.calTxtLayout.setOnClickListener {
+            toggleBottomSheet()
+        }
 
         return binding.root
     }
@@ -58,5 +69,18 @@ class CalendarFragment : Fragment() {
         calendar.set(Calendar.YEAR, year)
         calendar.set(Calendar.MONTH, month)
         return calendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    }
+
+    // BottomSheet 토글 함수
+    private fun toggleBottomSheet() {
+        if (bottomSheetBehavior.state == BottomSheetBehavior.STATE_HIDDEN) {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+        } else {
+            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
+        }
+    }
+    // BottomSheet를 열기 위한 함수
+    private fun openBottomSheet() {
+        bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 }

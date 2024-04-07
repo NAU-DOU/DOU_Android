@@ -30,7 +30,6 @@ class ListFragment : Fragment() {
             add(ListItem("#8", "50"))
             add(ListItem("#9", "60"))
             add(ListItem("#10", "60"))
-            // 필요한 만큼 데이터를 추가할 수 있습니다.
         }
     }
 
