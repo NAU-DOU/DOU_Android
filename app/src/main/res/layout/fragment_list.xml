@@ -11,6 +11,7 @@
 
     <TextView
         android:id="@+id/user_title"
+        android:paddingBottom="10dp"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:fontFamily="@font/promptbold"
@@ -124,6 +125,8 @@
                 />
 
             <androidx.recyclerview.widget.RecyclerView
+                android:paddingTop="10dp"
+                android:paddingBottom="50dp"
                 android:id="@+id/list_recycler"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
