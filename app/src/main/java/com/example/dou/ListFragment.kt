@@ -42,7 +42,9 @@ class ListFragment : Fragment() {
         binding.talkBtn.setOnClickListener {
             val navController = findNavController()
 
-            navController.navigate(R.id.action_listFragment_to_homeFragment)
+            // 채팅 화면 테스트를 위한 action 잠시 추가
+            navController.navigate(R.id.action_listFragment_to_chatFragment)
+            //navController.navigate(R.id.action_listFragment_to_homeFragment)
         }
 
         binding.listRecycler.layoutManager = LinearLayoutManager(context)
