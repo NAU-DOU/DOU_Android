@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.dou.databinding.FragmentCalendarBinding
 import com.example.dou.databinding.FragmentChatBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -48,6 +49,15 @@ class ChatFragment : Fragment() {
             }
         }
 
+        // RecyclerView의 아이템이 추가될 때마다 NestedScrollView를 자동 스크롤
+        adapter.registerAdapterDataObserver(object : RecyclerView.AdapterDataObserver() {
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                binding.chatLayout.post {
+                    binding.chatLayout.fullScroll(View.FOCUS_DOWN)
+                }
+            }
+        })
+
         return binding.root
     }
 
@@ -81,6 +91,5 @@ class ChatFragment : Fragment() {
         val bottomNav = requireActivity().findViewById<View>(R.id.bottomNavi)
         bottomNav.visibility = View.VISIBLE
     }
-
 
 }

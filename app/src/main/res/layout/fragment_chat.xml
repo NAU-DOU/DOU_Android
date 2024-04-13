@@ -27,22 +27,7 @@
             android:textSize="30dp">
         </TextView>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chat_recycler"
-            android:layout_marginTop="20dp"
-            android:paddingBottom="150dp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:orientation="vertical"
-            android:overScrollMode="never"
-            android:nestedScrollingEnabled="false">
-        </androidx.recyclerview.widget.RecyclerView>
-
-
-        <!--<androidx.core.widget.NestedScrollView
+        <androidx.core.widget.NestedScrollView
             android:id="@+id/chat_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -54,7 +39,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                &lt;!&ndash;<ImageView
+                <ImageView
                     android:layout_marginTop="20dp"
                     android:id="@+id/chat_dou_img"
                     android:layout_width="130dp"
@@ -65,13 +50,25 @@
                     app:layout_constraintHorizontal_bias="0.501"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent">
-                </ImageView>&ndash;&gt;
+                </ImageView>
 
-
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/chat_recycler"
+                    android:layout_marginTop="20dp"
+                    android:paddingBottom="100dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@id/chat_dou_img"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:orientation="vertical"
+                    android:overScrollMode="never"
+                    android:nestedScrollingEnabled="false">
+                </androidx.recyclerview.widget.RecyclerView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-        </androidx.core.widget.NestedScrollView>-->
+        </androidx.core.widget.NestedScrollView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
