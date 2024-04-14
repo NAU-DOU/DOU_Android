@@ -9,7 +9,11 @@
         android:id="@+id/homeFragment"
         android:name="com.example.dou.HomeFragment"
         android:label="fragment_home"
-        tools:layout="@layout/fragment_home" />
+        tools:layout="@layout/fragment_home" >
+        <action
+            android:id="@+id/action_homeFragment_to_emotionFragment"
+            app:destination="@id/emotionFragment" />
+    </fragment>
     <fragment
         android:id="@+id/calendarFragment"
         android:name="com.example.dou.CalendarFragment"
@@ -37,4 +41,9 @@
         android:name="com.example.dou.ChatFragment"
         android:label="fragment_chat"
         tools:layout="@layout/fragment_chat" />
+    <fragment
+        android:id="@+id/emotionFragment"
+        android:name="com.example.dou.EmotionFragment"
+        android:label="fragment_emotion"
+        tools:layout="@layout/fragment_emotion" />
 </navigation>
