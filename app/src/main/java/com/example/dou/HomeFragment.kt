@@ -89,7 +89,11 @@ class HomeFragment : Fragment() {
                     binding.recordDesLayoutFirst.visibility = View.INVISIBLE
                     binding.recordDesLayout1.visibility = View.VISIBLE
                     binding.recordDesLayout3.visibility = View.INVISIBLE
-                } else if (!state) {
+                }
+                else if (!state && binding.recordDesLayout2.visibility == View.VISIBLE) {
+                    binding.homeRecord.isClickable = false
+                }
+                else if (!state) {
                     startRecording()
                     binding.recordFin.visibility = View.VISIBLE
                     binding.recordDesLayoutFirst.visibility = View.INVISIBLE
