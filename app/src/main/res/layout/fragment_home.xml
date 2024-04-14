@@ -201,6 +201,47 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:visibility="invisible"
+                android:id="@+id/record_des_layout3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                >
+
+                <TextView
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    android:id="@+id/record_des8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="잠시 녹음을 일시정지했어!"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/point_color"
+                    android:textSize="20dp">
+                </TextView>
+
+                <TextView
+                    app:layout_constraintTop_toBottomOf="@id/record_des8"
+                    android:id="@+id/record_des9"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="나를 다시 눌러서 녹음을 시작해봐"
+                    android:fontFamily="@font/pretendardextrabold"
+                    android:textColor="@color/white"
+                    android:textSize="20dp">
+                </TextView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <Button

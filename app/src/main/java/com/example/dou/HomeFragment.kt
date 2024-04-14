@@ -88,11 +88,13 @@ class HomeFragment : Fragment() {
                     binding.recordFin.visibility = View.VISIBLE
                     binding.recordDesLayoutFirst.visibility = View.INVISIBLE
                     binding.recordDesLayout1.visibility = View.VISIBLE
+                    binding.recordDesLayout3.visibility = View.INVISIBLE
                 } else {
                     pauseRecording()
-                    binding.recordFin.visibility = View.VISIBLE // 재생 버튼으로 변경하거나 숨기거나
-                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE // 재생 버튼으로 변경하거나 숨기거나
-                    binding.recordDesLayout1.visibility = View.VISIBLE // 재생 버튼으로 변경하거나 숨기거나
+                    binding.recordFin.visibility = View.INVISIBLE // 재생 버튼으로 변경하거나 숨기거나
+                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
+                    binding.recordDesLayout1.visibility = View.INVISIBLE
+                    binding.recordDesLayout3.visibility = View.VISIBLE
                 }
             }
         }
@@ -126,7 +128,7 @@ class HomeFragment : Fragment() {
             state = true
             Toast.makeText(
                 requireContext().applicationContext,
-                "레코딩 시작되었습니다.",
+                "녹음 시작되었습니다",
                 Toast.LENGTH_SHORT
             ).show()
         } catch (e: IllegalStateException) {
@@ -142,9 +144,19 @@ class HomeFragment : Fragment() {
             state = false
             Toast.makeText(
                 requireContext().applicationContext,
-                "일시 정지되었습니다.",
+                "녹음을 일시중지합니다",
                 Toast.LENGTH_SHORT
             ).show()
+
+            if (binding.recordDesLayout3.visibility == View.VISIBLE) {
+                mediaRecorder?.resume()
+                state = true
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음이 다시 시작되었습니다",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         } else {
             Toast.makeText(
                 requireContext().applicationContext,
@@ -162,13 +174,13 @@ class HomeFragment : Fragment() {
             state = false
             Toast.makeText(
                 requireContext().applicationContext,
-                "중지 되었습니다.",
+                "녹음이 완료 되었습니다",
                 Toast.LENGTH_SHORT
             ).show()
         } else {
             Toast.makeText(
                 requireContext().applicationContext,
-                "녹음 중이 아닙니다.",
+                "녹음 중이 아닙니다",
                 Toast.LENGTH_SHORT
             ).show()
         }

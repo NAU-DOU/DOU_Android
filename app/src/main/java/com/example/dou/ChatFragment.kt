@@ -46,6 +46,11 @@ class ChatFragment : Fragment() {
                 hideBottomNavigation()
             } else {
                 showBottomNavigation()
+
+                // 키보드가 닫혔을 때 NestedScrollView를 항상 마지막 부분으로 스크롤
+                binding.chatLayout.post {
+                    binding.chatLayout.fullScroll(View.FOCUS_DOWN)
+                }
             }
         }
 
@@ -54,9 +59,17 @@ class ChatFragment : Fragment() {
             override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
                 binding.chatLayout.post {
                     binding.chatLayout.fullScroll(View.FOCUS_DOWN)
+                    binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1) // RecyclerView 가장 아래쪽으로 스크롤
+
                 }
             }
         })
+
+        // 메시지를 보낸 후에도 EditText에 포커스를 유지
+        binding.sendBtn.setOnClickListener {
+            sendMessage()
+            binding.editTxt.requestFocus()
+        }
 
         return binding.root
     }
@@ -91,5 +104,9 @@ class ChatFragment : Fragment() {
         val bottomNav = requireActivity().findViewById<View>(R.id.bottomNavi)
         bottomNav.visibility = View.VISIBLE
     }
-
+    // RecyclerView를 마지막 아이템의 위치로 스크ㅗㄹ. 항상 마지막 채팅 메시지가 보이도록
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        binding.chatRecycler.scrollToPosition(chatItems.size - 1)
+    }
 }

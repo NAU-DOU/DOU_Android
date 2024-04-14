@@ -63,7 +63,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/emotion_title_layout"
-        app:behavior_hideable="true"
+        app:behavior_hideable="false"
         app:behavior_peekHeight="64dp"
         app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
         android:layout_width="match_parent"
