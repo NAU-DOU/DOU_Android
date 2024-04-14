@@ -83,7 +83,13 @@ class HomeFragment : Fragment() {
                     RECORD_AUDIO_PERMISSION_REQUEST_CODE
                 )
             } else {
-                if (!state) {
+                if (!state && binding.recordDesLayout3.visibility == View.VISIBLE) {
+                    pauseRecording()
+                    binding.recordFin.visibility = View.VISIBLE
+                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
+                    binding.recordDesLayout1.visibility = View.VISIBLE
+                    binding.recordDesLayout3.visibility = View.INVISIBLE
+                } else if (!state) {
                     startRecording()
                     binding.recordFin.visibility = View.VISIBLE
                     binding.recordDesLayoutFirst.visibility = View.INVISIBLE
@@ -147,7 +153,7 @@ class HomeFragment : Fragment() {
                 "녹음을 일시중지합니다",
                 Toast.LENGTH_SHORT
             ).show()
-
+        } else {
             if (binding.recordDesLayout3.visibility == View.VISIBLE) {
                 mediaRecorder?.resume()
                 state = true
@@ -156,13 +162,13 @@ class HomeFragment : Fragment() {
                     "녹음이 다시 시작되었습니다",
                     Toast.LENGTH_SHORT
                 ).show()
+            } else {
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음 중이 아닙니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
-        } else {
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음 중이 아닙니다.",
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
 
