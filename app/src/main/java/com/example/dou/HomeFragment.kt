@@ -1,13 +1,19 @@
 package com.example.dou
 
+import android.content.ComponentName
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaRecorder
 import android.os.Bundle
 import android.os.Environment
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,9 +21,11 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.fragment.findNavController
 import com.example.dou.databinding.FragmentHomeBinding
 import java.io.IOException
 import java.util.Date
+import java.util.Locale
 import kotlin.random.Random
 
 class HomeFragment : Fragment() {
@@ -31,6 +39,7 @@ class HomeFragment : Fragment() {
     private var output: String? = null
     private var mediaRecorder: MediaRecorder? = null
     private var state: Boolean = false
+    private var sttResult: String? = null
 
     private val randomTexts = listOf(
         "도우는 오늘 피자 도우를 먹었어\n넌 맛있는 밥 먹었어?",
@@ -116,8 +125,30 @@ class HomeFragment : Fragment() {
                 binding.recordSee.visibility = View.VISIBLE
                 binding.recordDesLayout2.visibility = View.VISIBLE
                 binding.recordDesLayout1.visibility = View.INVISIBLE
+
+                // 녹음이 완료된 후 STT를 수행합니다.
+                // performSTT()
             }
         }
+
+        // record_see 버튼 클릭 이벤트 핸들러
+        binding.recordSee.setOnClickListener {
+            // STT 결과가 있는지 확인하고, EmotionFragment로 전달
+            if (!sttResult.isNullOrEmpty()) {
+                val bundle = Bundle().apply {
+                    putString("stt_result", sttResult)
+                }
+                // NavController를 통해 EmotionFragment로 이동
+                findNavController().navigate(
+                    R.id.action_homeFragment_to_emotionFragment,
+                    bundle
+                )
+            } else {
+                // STT 결과가 없는 경우에 대한 처리
+                Toast.makeText(requireContext(), "No STT result available", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         return binding.root
     }
 
@@ -141,6 +172,9 @@ class HomeFragment : Fragment() {
                 "녹음 시작되었습니다",
                 Toast.LENGTH_SHORT
             ).show()
+
+            // 녹음이 시작되면 동시에 STT를 수행합니다.
+            performSTT() // STT를 시작합니다.
         } catch (e: IllegalStateException) {
             e.printStackTrace()
         } catch (e: IOException) {
@@ -233,5 +267,61 @@ class HomeFragment : Fragment() {
             }
         }
         return spannableString
+    }
+
+    private fun performSTT() {
+        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+
+        val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext(), ComponentName("com.google.android.googlequicksearchbox", "com.google.android.voicesearch.serviceapi.GoogleRecognitionService"))
+        speechRecognizer.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {
+                // 사용자의 음성이 감지되었을 때 호출됩니다.
+            }
+
+            override fun onBeginningOfSpeech() {
+                // 사용자가 음성을 시작했을 때 호출됩니다.
+            }
+
+            override fun onRmsChanged(rmsdB: Float) {
+                // 사용자의 음성 입력이 감지되는 동안 호출됩니다.
+            }
+
+            override fun onBufferReceived(buffer: ByteArray?) {
+                // 음성 입력 버퍼가 수신될 때 호출됩니다.
+            }
+
+            override fun onEndOfSpeech() {
+                // 사용자의 음성 입력이 종료되었을 때 호출됩니다.
+            }
+
+            override fun onError(error: Int) {
+                // 오류가 발생했을 때 호출됩니다.
+                Toast.makeText(requireContext(), "음성 인식 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+            }
+
+            override fun onResults(results: Bundle?) {
+                // 음성 인식 결과가 준비되었을 때 호출됩니다.
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (matches != null && matches.isNotEmpty()) {
+                    // 전역 변수에 결과를 저장합니다.
+                    sttResult = matches[0]
+
+                    Log.d("STT_Result", "STT Result: $sttResult")
+                }
+            }
+
+            override fun onPartialResults(partialResults: Bundle?) {
+                // 부분적인 음성 인식 결과가 수신될 때 호출됩니다.
+            }
+
+            override fun onEvent(eventType: Int, params: Bundle?) {
+                // 다양한 이벤트에 대한 추가 정보를 제공하는 경우 호출됩니다.
+            }
+        })
+
+        // SpeechRecognizer에 음성 인식 요청을 시작합니다.
+        speechRecognizer.startListening(speechRecognizerIntent)
     }
 }
