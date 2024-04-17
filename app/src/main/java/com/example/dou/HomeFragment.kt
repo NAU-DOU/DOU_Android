@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaRecorder
+import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.speech.RecognitionListener
@@ -30,16 +31,14 @@ import kotlin.random.Random
 
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
-    private val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 101
+    private lateinit var speechRecognizer: SpeechRecognizer
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
     }
 
-    private var output: String? = null
-    private var mediaRecorder: MediaRecorder? = null
-    private var state: Boolean = false
-    private var sttResult: String? = null
+    private var isRecording = false
 
     private val randomTexts = listOf(
         "도우는 오늘 피자 도우를 먹었어\n넌 맛있는 밥 먹었어?",
@@ -51,7 +50,7 @@ class HomeFragment : Fragment() {
     )
     private val sentencesToHighlight = listOf(
         "도우", "수고했어!", "나랑 대화해볼래?",
-        "지금 당장 행복했으면", "도우가 토닥토닥 해줄게", "힘들면 쉬어도 돼","넌 맛있는 밥 먹었어?"
+        "지금 당장 행복했으면", "도우가 토닥토닥 해줄게", "힘들면 쉬어도 돼", "넌 맛있는 밥 먹었어?"
     )
     private val colorCode = "#1fff1b"
 
@@ -70,189 +69,182 @@ class HomeFragment : Fragment() {
         val highlightedText = highlightSentencesInText(randomText, sentencesToHighlight, colorCode)
         binding.homeRandomText.text = highlightedText
 
+        // 권한 설정
+        requestPermission()
+
+        // RecognizerIntent 생성
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intent.putExtra(
+            RecognizerIntent.EXTRA_CALLING_PACKAGE,
+            requireActivity().packageName
+        )    // 여분의 키
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")
+
         binding.homeRecord.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    android.Manifest.permission.RECORD_AUDIO
-                ) != PackageManager.PERMISSION_GRANTED ||
-                ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // Permission is not granted
-                val permissions = arrayOf(
-                    android.Manifest.permission.RECORD_AUDIO,
-                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-                    android.Manifest.permission.READ_EXTERNAL_STORAGE
-                )
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    permissions,
-                    RECORD_AUDIO_PERMISSION_REQUEST_CODE
-                )
-            } else {
-                if (!state && binding.recordDesLayout3.visibility == View.VISIBLE) {
-                    pauseRecording()
-                    binding.recordFin.visibility = View.VISIBLE
-                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-                    binding.recordDesLayout1.visibility = View.VISIBLE
-                    binding.recordDesLayout3.visibility = View.INVISIBLE
-                }
-                else if (!state && binding.recordDesLayout2.visibility == View.VISIBLE) {
-                    binding.homeRecord.isClickable = false
-                }
-                else if (!state) {
-                    startRecording()
-                    binding.recordFin.visibility = View.VISIBLE
-                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-                    binding.recordDesLayout1.visibility = View.VISIBLE
-                    binding.recordDesLayout3.visibility = View.INVISIBLE
-                } else {
-                    pauseRecording()
-                    binding.recordFin.visibility = View.INVISIBLE // 재생 버튼으로 변경하거나 숨기거나
-                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-                    binding.recordDesLayout1.visibility = View.INVISIBLE
-                    binding.recordDesLayout3.visibility = View.VISIBLE
-                }
-            }
+            startRecognition()
         }
 
         binding.recordFin.setOnClickListener {
-            if (state) {
-                stopRecording()
+            if (isRecording) {
+                // 녹음이 진행 중인 경우 녹음을 중지합니다
+                speechRecognizer.stopListening()
+                isRecording = false
+                // UI를 업데이트하거나 필요한 작업을 수행합니다
+
                 binding.recordFin.visibility = View.INVISIBLE
                 binding.recordSee.visibility = View.VISIBLE
                 binding.recordDesLayout2.visibility = View.VISIBLE
                 binding.recordDesLayout1.visibility = View.INVISIBLE
 
-                // 녹음이 완료된 후 STT를 수행합니다.
-                // performSTT()
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음이 중지되었습니다",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
 
-        // record_see 버튼 클릭 이벤트 핸들러
-        binding.recordSee.setOnClickListener {
-            // STT 결과가 있는지 확인하고, EmotionFragment로 전달
-            if (!sttResult.isNullOrEmpty()) {
-                val bundle = Bundle().apply {
-                    putString("stt_result", sttResult)
-                }
-                // NavController를 통해 EmotionFragment로 이동
-                findNavController().navigate(
-                    R.id.action_homeFragment_to_emotionFragment,
-                    bundle
-                )
-            } else {
-                // STT 결과가 없는 경우에 대한 처리
-                Toast.makeText(requireContext(), "No STT result available", Toast.LENGTH_SHORT).show()
-            }
-        }
+//        binding.recordSee.setOnClickListener {
+//            // 음성 인식 결과를 로그로 출력합니다
+//            if (resultText.isNotEmpty()) {
+//                Log.d("음성 인식 결과", resultText)
+//            } else {
+//                Log.d("음성 인식 결과", "인식된 내용이 없습니다.")
+//            }
+//        }
 
         return binding.root
     }
 
-    private fun startRecording() {
-        //config and create MediaRecorder Object
-        val fileName: String = Date().time.toString() + ".mp3"
-        output =
-            Environment.getExternalStorageDirectory().absolutePath + "/Download/" + fileName //내장메모리 밑에 위치
-        mediaRecorder = MediaRecorder()
-        mediaRecorder?.setAudioSource((MediaRecorder.AudioSource.MIC))
-        mediaRecorder?.setOutputFormat((MediaRecorder.OutputFormat.MPEG_4))
-        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-        mediaRecorder?.setOutputFile(output)
+    // 음성 인식 시작 메서드
+    private fun startRecognition() {
+        isRecording = true
+        binding.recordFin.visibility = View.VISIBLE
+        binding.recordDesLayoutFirst.visibility = View.INVISIBLE
+        binding.recordDesLayout1.visibility = View.VISIBLE
+        // 아직 예외처리중
+        binding.recordDesLayout2.visibility = View.INVISIBLE
+        binding.recordDesLayout3.visibility = View.INVISIBLE
 
-        try {
-            mediaRecorder?.prepare()
-            mediaRecorder?.start()
-            state = true
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음 시작되었습니다",
-                Toast.LENGTH_SHORT
-            ).show()
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+        intent.putExtra(
+            RecognizerIntent.EXTRA_CALLING_PACKAGE,
+            requireActivity().packageName
+        )    // 여분의 키
+        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, "ko-KR")         // 언어 설정
 
-            // 녹음이 시작되면 동시에 STT를 수행합니다.
-            performSTT() // STT를 시작합니다.
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-        } catch (e: IOException) {
-            e.printStackTrace()
+        // 새 SpeechRecognizer 를 만드는 팩토리 메서드
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext())
+        speechRecognizer.setRecognitionListener(recognitionListener)    // 리스너 설정
+        speechRecognizer.startListening(intent)
+
+        Toast.makeText(
+            requireContext().applicationContext,
+            "녹음 시작되었습니다",
+            Toast.LENGTH_SHORT
+        ).show()// 듣기 시작
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Fragment가 종료될 때 SpeechRecognizer를 해제해야 합니다.
+        speechRecognizer.destroy()
+    }
+
+    // 권한 설정 메소드
+    private fun requestPermission() {
+        // Check if the permission is not granted
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                android.Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            // Request the permission
+            requestPermissions(
+                arrayOf(android.Manifest.permission.RECORD_AUDIO),
+                RECORD_AUDIO_PERMISSION_CODE
+            )
         }
     }
 
-    private fun pauseRecording() {
-        if (state) {
-            mediaRecorder?.pause()
-            state = false
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음을 일시중지합니다",
-                Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            if (binding.recordDesLayout3.visibility == View.VISIBLE) {
-                mediaRecorder?.resume()
-                state = true
-                Toast.makeText(
-                    requireContext().applicationContext,
-                    "녹음이 다시 시작되었습니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-            } else {
-                Toast.makeText(
-                    requireContext().applicationContext,
-                    "녹음 중이 아닙니다.",
-                    Toast.LENGTH_SHORT
-                ).show()
+    companion object {
+        private const val RECORD_AUDIO_PERMISSION_CODE = 1
+    }
+
+    // 리스너 설정
+    private val recognitionListener: RecognitionListener = object : RecognitionListener {
+        // 말하기 시작할 준비가되면 호출
+        override fun onReadyForSpeech(params: Bundle) {
+//            isRecording = true
+//            binding.recordFin.visibility = View.VISIBLE
+//            binding.recordDesLayoutFirst.visibility = View.INVISIBLE
+//            binding.recordDesLayout1.visibility = View.VISIBLE
+//            binding.recordDesLayout3.visibility = View.INVISIBLE
+//
+
+        }
+
+        // 말하기 시작 했을 때 호출
+        override fun onBeginningOfSpeech() {
+
+        }
+
+        // 입력받는 소리의 크기를 알려줌
+        override fun onRmsChanged(rmsdB: Float) {}
+
+        // 말을 시작하고 인식이 된 단어를 buffer에 담음
+        override fun onBufferReceived(buffer: ByteArray) {}
+
+        // 말하기를 중지하면 호출
+        override fun onEndOfSpeech() {
+        }
+
+        // 오류 발생했을 때 호출
+        override fun onError(error: Int) {
+            val message = when (error) {
+                SpeechRecognizer.ERROR_AUDIO -> "오디오 에러"
+                SpeechRecognizer.ERROR_CLIENT -> "클라이언트 에러"
+                SpeechRecognizer.ERROR_INSUFFICIENT_PERMISSIONS -> "퍼미션 없음"
+                SpeechRecognizer.ERROR_NETWORK -> "네트워크 에러"
+                SpeechRecognizer.ERROR_NETWORK_TIMEOUT -> "네트웍 타임아웃"
+                SpeechRecognizer.ERROR_NO_MATCH -> "찾을 수 없음"
+                SpeechRecognizer.ERROR_RECOGNIZER_BUSY -> "RECOGNIZER 가 바쁨"
+                SpeechRecognizer.ERROR_SERVER -> "서버가 이상함"
+                SpeechRecognizer.ERROR_SPEECH_TIMEOUT -> "말하는 시간초과"
+                else -> "알 수 없는 오류임"
             }
         }
-    }
 
-    private fun stopRecording() {
-        if (state) {
-            mediaRecorder?.stop()
-            mediaRecorder?.reset()
-            mediaRecorder?.release()
-            state = false
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음이 완료 되었습니다",
-                Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음 중이 아닙니다",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
+        // 인식 결과가 준비되면 호출
+        override fun onResults(results: Bundle) {
+            // 말을 하면 ArrayList에 단어를 넣고 textView에 단어를 이어줌
+            val matches = results.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+            if (!matches.isNullOrEmpty()) {
+                // 첫 번째 결과만 사용할 경우
+                //val recognizedText = matches[0]
+                // UI에 인식된 텍스트를 표시할 수 있도록 처리
+                // binding.textView.text = recognizedText
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            RECORD_AUDIO_PERMISSION_REQUEST_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission is granted, start recording
-                    startRecording()
-                } else {
-                    // Permission denied
-                    Toast.makeText(requireContext(), "Permission Denied!", Toast.LENGTH_SHORT).show()
+                // 모든 결과를 사용하고 싶을 경우
+                for (match in matches) {
+                    Log.d("대화 내용", match)
+                    // UI에 인식된 각 텍스트를 표시할 수 있도록 처리
                 }
-                return
             }
         }
+
+        // 부분 인식 결과를 사용할 수 있을 때 호출
+        override fun onPartialResults(partialResults: Bundle) {}
+
+        // 향후 이벤트를 추가하기 위해 예약
+        override fun onEvent(eventType: Int, params: Bundle) {}
     }
 
-    // highlightSentencesInText 함수 정의
-    private fun highlightSentencesInText(text: String, sentencesToHighlight: List<String>, colorCode: String): SpannableString {
+    private fun highlightSentencesInText(
+        text: String,
+        sentencesToHighlight: List<String>,
+        colorCode: String
+    ): SpannableString {
         val color = Color.parseColor(colorCode)
         val spannableString = SpannableString(text)
         for (sentence in sentencesToHighlight) {
@@ -267,61 +259,5 @@ class HomeFragment : Fragment() {
             }
         }
         return spannableString
-    }
-
-    private fun performSTT() {
-        val speechRecognizerIntent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        speechRecognizerIntent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-
-        val speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext(), ComponentName("com.google.android.googlequicksearchbox", "com.google.android.voicesearch.serviceapi.GoogleRecognitionService"))
-        speechRecognizer.setRecognitionListener(object : RecognitionListener {
-            override fun onReadyForSpeech(params: Bundle?) {
-                // 사용자의 음성이 감지되었을 때 호출됩니다.
-            }
-
-            override fun onBeginningOfSpeech() {
-                // 사용자가 음성을 시작했을 때 호출됩니다.
-            }
-
-            override fun onRmsChanged(rmsdB: Float) {
-                // 사용자의 음성 입력이 감지되는 동안 호출됩니다.
-            }
-
-            override fun onBufferReceived(buffer: ByteArray?) {
-                // 음성 입력 버퍼가 수신될 때 호출됩니다.
-            }
-
-            override fun onEndOfSpeech() {
-                // 사용자의 음성 입력이 종료되었을 때 호출됩니다.
-            }
-
-            override fun onError(error: Int) {
-                // 오류가 발생했을 때 호출됩니다.
-                Toast.makeText(requireContext(), "음성 인식 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
-            }
-
-            override fun onResults(results: Bundle?) {
-                // 음성 인식 결과가 준비되었을 때 호출됩니다.
-                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
-                if (matches != null && matches.isNotEmpty()) {
-                    // 전역 변수에 결과를 저장합니다.
-                    sttResult = matches[0]
-
-                    Log.d("STT_Result", "STT Result: $sttResult")
-                }
-            }
-
-            override fun onPartialResults(partialResults: Bundle?) {
-                // 부분적인 음성 인식 결과가 수신될 때 호출됩니다.
-            }
-
-            override fun onEvent(eventType: Int, params: Bundle?) {
-                // 다양한 이벤트에 대한 추가 정보를 제공하는 경우 호출됩니다.
-            }
-        })
-
-        // SpeechRecognizer에 음성 인식 요청을 시작합니다.
-        speechRecognizer.startListening(speechRecognizerIntent)
     }
 }
