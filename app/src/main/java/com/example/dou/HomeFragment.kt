@@ -120,6 +120,7 @@ class HomeFragment : Fragment() {
     private fun startRecognition() {
         isRecording = true
         binding.recordFin.visibility = View.VISIBLE
+        binding.recordSee.visibility = View.INVISIBLE
         binding.recordDesLayoutFirst.visibility = View.INVISIBLE
         binding.recordDesLayout1.visibility = View.VISIBLE
         // 아직 예외처리중
