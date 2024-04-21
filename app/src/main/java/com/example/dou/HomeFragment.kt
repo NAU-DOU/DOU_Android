@@ -192,6 +192,8 @@ class HomeFragment : Fragment() {
         ).show()
     }
 
+    // 녹음을 진행하고 파일을 생성함, 녹음 진행 후에 저장하는 것은 createAudioFile()에서 함
+    // 파일이 사용자에게 저장될 위치와 이름을 선택받기 위해서 추가작업이 필요하기 때문에 createAudioFile()을 사용하는 것
     private fun startRecording() {
         val fileName: String = "audio_${Date().time}.mp3"
         val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
@@ -257,11 +259,13 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // 사용자가 이름을 Date를 이용해서 고유한 이름을 가지도록 함
     private fun createAudioFile() {
+        val fileName = "audio_${Date().time}.mp3"
         val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "audio/mpeg"
-            putExtra(Intent.EXTRA_TITLE, "audio_record.mp3")
+            putExtra(Intent.EXTRA_TITLE, fileName)
         }
         startActivityForResult(intent, CREATE_FILE)
     }
