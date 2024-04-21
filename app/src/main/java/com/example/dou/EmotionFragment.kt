@@ -26,6 +26,7 @@ import java.io.InputStream
 class EmotionFragment : Fragment() {
     private lateinit var binding: FragmentEmotionBinding
     private lateinit var speechClient: SpeechClient
+
     // 외부 저장소 읽기 권한 요청 코드
     private val READ_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 123
 
@@ -42,20 +43,16 @@ class EmotionFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 권한 요청
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 123)
-//        } else {
-//            initializeSpeechClient()
-//            startSpeechToTextConversion()
-//        }
-
         // 외부 저장소 읽기 권한 요청
-        requestReadExternalStoragePermission()
+        requestReadMediaStoragePermission()
+        // Speech-to-Text 변환 클라이언트 초기화
+        initializeSpeechClient()
+        // Speech-to-Text 변환 작업 시작
+        startSpeechToTextConversion()
     }
 
-    // 사용자에게 외부 저장소 읽기 권한을 요청하는 함수
-    private fun requestReadExternalStoragePermission() {
+    // 사용자에게 외부 저장소 미디어 액세스 권한을 요청하는 함수
+    private fun requestReadMediaStoragePermission() {
         if (ContextCompat.checkSelfPermission(
                 requireContext(),
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -69,12 +66,10 @@ class EmotionFragment : Fragment() {
             )
         } else {
             // 이미 권한이 허용된 경우
-            // 외부 저장소에서 Speech-to-Text 변환 작업을 수행합니다.
+            // Speech-to-Text 변환 클라이언트 초기화 및 작업 시작
             initializeSpeechClient()
-            startSpeechToTextConversion()
         }
     }
-
 
     // 권한 요청 결과 처리하는 함수
     override fun onRequestPermissionsResult(
@@ -87,15 +82,14 @@ class EmotionFragment : Fragment() {
                 // 외부 저장소 읽기 권한 요청에 대한 결과 확인
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // 권한이 허용된 경우
-                    // 외부 저장소에서 Speech-to-Text 변환 작업을 수행합니다.
+                    // Speech-to-Text 변환 클라이언트 초기화 및 작업 시작
                     initializeSpeechClient()
-                    startSpeechToTextConversion()
-                    Toast.makeText(requireContext(), "외부 저장소 읽기 권한이 있습니다.", Toast.LENGTH_SHORT).show()
                 } else {
                     // 권한이 거부된 경우
                     // 사용자에게 권한이 필요함을 알리거나, 권한 설정 화면으로 이동할 수 있습니다.
                     // 여기서는 간단히 토스트 메시지를 통해 알립니다.
-                    Toast.makeText(requireContext(), "외부 저장소 읽기 권한이 필요합니다.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireContext(), "외부 저장소 미디어 액세스 권한이 필요합니다.", Toast.LENGTH_SHORT)
+                        .show()
                 }
                 return
             }
@@ -103,23 +97,26 @@ class EmotionFragment : Fragment() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
-    // 외부 저장소에서 파일을 읽어오는 함수
-    private fun readExternalStorage() {
-        // 외부 저장소에서 파일을 읽어오는 작업을 수행합니다.
-        // 여기에 파일을 읽어오는 코드를 추가합니다.
-    }
+    // Speech-to-Text 변환 클라이언트 초기화 함수
     private fun initializeSpeechClient() {
+        // Speech-to-Text 변환 클라이언트 초기화
         val resourceId = R.raw.naudou // R.raw.naudou는 JSON 파일의 리소스 ID입니다.
         val credentials = getGoogleCredentialsFromResource(requireContext(), resourceId)
 
-        // Google Cloud Speech-to-Text 클라이언트 초기화
         val settingsBuilder = SpeechSettings.newBuilder()
             .setCredentialsProvider { credentials }
             .build()
         speechClient = SpeechClient.create(settingsBuilder)
+
+        // Speech-to-Text 변환 작업 시작
+        startSpeechToTextConversion()
     }
 
+    // Speech-to-Text 변환 작업 함수
     private fun startSpeechToTextConversion() {
+        // Speech-to-Text 변환 작업을 시작하기 전에 UI 업데이트를 수행합니다.
+        binding.emoTxt.text = "변환 중..."
+
         // example_file.mp3의 경로
         val filePath = "/storage/emulated/0/Download/example_file.mp3"
 
@@ -152,14 +149,24 @@ class EmotionFragment : Fragment() {
 
         // 변환된 텍스트를 화면에 표시하거나 다른 곳에 전달하는 등의 작업 수행
         Log.d("Speech-to-Text Result", resultText)
+
+        // 변환 작업이 완료되면 UI 업데이트를 수행합니다.
+        binding.emoTxt.text = resultText
+        Toast.makeText(requireContext(), "음성을 텍스트로 변환하였습니다.", Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
-        speechClient.close()
+        // onDestroyView에서는 speechClient가 초기화된 경우에만 close를 호출합니다.
+        if (::speechClient.isInitialized) {
+            speechClient.close()
+        }
     }
 
-    private fun getGoogleCredentialsFromResource(context: Context, resourceId: Int): GoogleCredentials {
+    private fun getGoogleCredentialsFromResource(
+        context: Context,
+        resourceId: Int
+    ): GoogleCredentials {
         val inputStream: InputStream = context.resources.openRawResource(resourceId)
         return GoogleCredentials.fromStream(inputStream)
     }

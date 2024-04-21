@@ -1,5 +1,8 @@
 package com.example.dou
 
+import android.Manifest
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaRecorder
@@ -24,19 +27,41 @@ import java.util.Date
 import kotlin.random.Random
 
 class HomeFragment : Fragment() {
-    private lateinit var binding: FragmentHomeBinding
+    private val CREATE_FILE = 1
     private val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 101
-
-    // 녹음 파일의 경로 저장
+    private lateinit var binding: FragmentHomeBinding
     private var recordedFilePath: String? = null
+    private var mediaRecorder: MediaRecorder? = null
+    private var state: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        // Check and request necessary permissions
+        requestAudioPermission()
+    }
+
+    private fun requestAudioPermission() {
+        if (ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.RECORD_AUDIO
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                requireActivity(),
+                arrayOf(Manifest.permission.RECORD_AUDIO),
+                RECORD_AUDIO_PERMISSION_REQUEST_CODE
+            )
+        } else {
+            //startRecording()
+        }
+    }
+
     private var output: String? = null
-    private var mediaRecorder: MediaRecorder? = null
-    private var state: Boolean = false
 
     private val randomTexts = listOf(
         "도우는 오늘 피자 도우를 먹었어\n넌 맛있는 밥 먹었어?",
@@ -73,28 +98,35 @@ class HomeFragment : Fragment() {
         }
 
         binding.homeRecord.setOnClickListener {
-            if (ContextCompat.checkSelfPermission(
-                    requireContext(),
-                    android.Manifest.permission.RECORD_AUDIO
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                // Permission is not granted
-                val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO)
-                ActivityCompat.requestPermissions(
-                    requireActivity(),
-                    permissions,
-                    RECORD_AUDIO_PERMISSION_REQUEST_CODE
-                )
-            } else {
-                // Permission is granted, start recording
-                startRecording()
+            startRecording()
 
-                binding.recordFin.visibility = View.VISIBLE
-                binding.recordCancel.visibility = View.VISIBLE
-                binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-                binding.recordDesLayout1.visibility = View.VISIBLE
-                binding.recordDesLayout3.visibility = View.INVISIBLE
-            }
+            binding.recordFin.visibility = View.VISIBLE
+            binding.recordCancel.visibility = View.VISIBLE
+            binding.recordDesLayoutFirst.visibility = View.INVISIBLE
+            binding.recordDesLayout1.visibility = View.VISIBLE
+            binding.recordDesLayout3.visibility = View.INVISIBLE
+//            if (ContextCompat.checkSelfPermission(
+//                    requireContext(),
+//                    android.Manifest.permission.RECORD_AUDIO
+//                ) != PackageManager.PERMISSION_GRANTED
+//            ) {
+//                // Permission is not granted
+//                val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO)
+//                ActivityCompat.requestPermissions(
+//                    requireActivity(),
+//                    permissions,
+//                    RECORD_AUDIO_PERMISSION_REQUEST_CODE
+//                )
+//            } else {
+//                // Permission is granted, start recording
+//                startRecording()
+//
+//                binding.recordFin.visibility = View.VISIBLE
+//                binding.recordCancel.visibility = View.VISIBLE
+//                binding.recordDesLayoutFirst.visibility = View.INVISIBLE
+//                binding.recordDesLayout1.visibility = View.VISIBLE
+//                binding.recordDesLayout3.visibility = View.INVISIBLE
+//            }
         }
 
         // "record_cancel" 버튼 클릭 이벤트 처리
@@ -128,19 +160,26 @@ class HomeFragment : Fragment() {
     private fun cancelRecording() {
         if (state) {
             // 녹음 중이면 녹음 중지
-            stopRecording()
+            //stopRecording()
             //binding.recordFin.visibility = View.VISIBLE
             binding.recordDesLayoutFirst.visibility = View.VISIBLE
             binding.recordFin.visibility = View.INVISIBLE
             binding.recordCancel.visibility = View.INVISIBLE
             binding.recordDesLayout1.visibility = View.INVISIBLE
             binding.recordDesLayout3.visibility = View.INVISIBLE
-        }
-        // 저장 중이던 파일이 있으면 삭제
-        output?.let {
-            val file = File(it)
-            if (file.exists()) {
-                file.delete()
+
+            // 저장 중이던 파일 삭제
+            output?.let {
+                val file = File(it)
+                if (file.exists()) {
+                    file.delete()
+                    Log.d("CanceledRecording", "Recording file deleted: $it")
+                    Toast.makeText(
+                        requireContext().applicationContext,
+                        "녹음이 취소되었습니다. 파일이 삭제되었습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
         // 녹음 상태 초기화
@@ -154,7 +193,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun startRecording() {
-        val fileName: String = Date().time.toString() + ".mp3"
+        val fileName: String = "audio_${Date().time}.mp3"
         val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
         val outputFile = File(outputDir, fileName)
 
@@ -164,47 +203,31 @@ class HomeFragment : Fragment() {
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile.absolutePath)
 
-        binding.homeRecord.isClickable = false
-
         try {
             mediaRecorder?.prepare()
             mediaRecorder?.start()
             state = true
             Toast.makeText(
                 requireContext().applicationContext,
-                "녹음 시작되었습니다",
+                "녹음을 시작했습니다.",
                 Toast.LENGTH_SHORT
             ).show()
 
-            // 녹음이 완료된 후에 파일의 경로를 저장합니다.
+            // Save the path of recorded file
             recordedFilePath = outputFile.absolutePath
-            Log.d("파일 위치", "$recordedFilePath")
-
-            // 녹음이 완료된 후에 Speech-to-Text API로 변환 작업 시작
-            mediaRecorder?.setOnInfoListener { _, _, _ ->
-                mediaRecorder?.stop()
-                mediaRecorder?.reset()
-                mediaRecorder?.release()
-                state = false
-                Toast.makeText(
-                    requireContext().applicationContext,
-                    "녹음이 종료되었습니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
 
         } catch (e: IllegalStateException) {
             e.printStackTrace()
             Toast.makeText(
                 requireContext().applicationContext,
-                "녹음 시작에 문제가 발생했습니다: ${e.message}",
+                "녹음 실패: ${e.message}",
                 Toast.LENGTH_SHORT
             ).show()
         } catch (e: IOException) {
             e.printStackTrace()
             Toast.makeText(
                 requireContext().applicationContext,
-                "녹음 시작에 문제가 발생했습니다: ${e.message}",
+                "녹음 실패: ${e.message}",
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -217,21 +240,30 @@ class HomeFragment : Fragment() {
             mediaRecorder?.release()
             state = false
 
-            if(binding.recordCancel.visibility != View.VISIBLE)
-            {
-                Toast.makeText(
-                    requireContext().applicationContext,
-                    "녹음이 완료 되었습니다",
-                    Toast.LENGTH_SHORT
-                ).show()
-            }
+            Toast.makeText(
+                requireContext().applicationContext,
+                "녹음을 완료했습니다.",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            // Create a document for the recorded file
+            createAudioFile()
         } else {
             Toast.makeText(
                 requireContext().applicationContext,
-                "녹음 중이 아닙니다",
+                "녹음이 시작되지 않았습니다.",
                 Toast.LENGTH_SHORT
             ).show()
         }
+    }
+
+    private fun createAudioFile() {
+        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "audio/mpeg"
+            putExtra(Intent.EXTRA_TITLE, "audio_record.mp3")
+        }
+        startActivityForResult(intent, CREATE_FILE)
     }
 
     override fun onRequestPermissionsResult(
@@ -240,16 +272,15 @@ class HomeFragment : Fragment() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            RECORD_AUDIO_PERMISSION_REQUEST_CODE -> {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // Permission is granted, start recording
-                    startRecording()
-                } else {
-                    // Permission denied
-                    Toast.makeText(requireContext(), "Permission Denied!", Toast.LENGTH_SHORT).show()
-                }
+        if (requestCode == RECORD_AUDIO_PERMISSION_REQUEST_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                startRecording()
+            } else {
+                Toast.makeText(
+                    requireContext(),
+                    "오디오 권한이 없습니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -270,5 +301,25 @@ class HomeFragment : Fragment() {
             }
         }
         return spannableString
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CREATE_FILE && resultCode == Activity.RESULT_OK) {
+            // File creation success
+            Toast.makeText(
+                requireContext().applicationContext,
+                "오늘의 대화가 성공적으로 저장됐어!",
+                Toast.LENGTH_SHORT
+            ).show()
+
+            // Here you can do further operations with the recorded audio file
+        } else {
+            Toast.makeText(
+                requireContext().applicationContext,
+                "오늘의 대화를 저장하지 못했어!",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 }
