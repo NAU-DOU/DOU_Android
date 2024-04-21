@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.example.dou"
         minSdk 24
-        targetSdk 34
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -43,7 +43,10 @@ android {
 dependencies {
 
     // Google STT 기능 사용을 위한 dependency
-    implementation 'com.google.cloud:google-cloud-speech:2.4.0'
+    implementation 'com.google.cloud:google-cloud-speech:2.5.0'
+    // Google Cloud Speech-to-Text API와 통신하는 데 사용되는 라이브러리
+    implementation 'io.grpc:grpc-okhttp:1.41.0'
+    implementation 'com.google.auth:google-auth-library-oauth2-http:0.27.0'
 
     implementation 'androidx.fragment:fragment:1.6.2'
 

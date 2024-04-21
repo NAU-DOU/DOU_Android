@@ -8,6 +8,7 @@ import android.os.Environment
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.navigation.fragment.findNavController
 import com.example.dou.databinding.FragmentHomeBinding
 import java.io.File
 import java.io.IOException
@@ -24,6 +26,9 @@ import kotlin.random.Random
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
     private val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 101
+
+    // 녹음 파일의 경로 저장
+    private var recordedFilePath: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -107,6 +112,16 @@ class HomeFragment : Fragment() {
                 binding.recordDesLayout1.visibility = View.INVISIBLE
             }
         }
+
+        // recordSee 버튼의 클릭 이벤트 핸들러
+        binding.recordSee.setOnClickListener {
+            val navController = findNavController()
+
+            // 채팅 화면 테스트를 위한 action 잠시 추가
+            navController.navigate(R.id.action_homeFragment_to_emotionFragment)
+            Log.d("파일 위치", "$recordedFilePath")
+        }
+
         return binding.root
     }
 
@@ -144,16 +159,12 @@ class HomeFragment : Fragment() {
         val outputFile = File(outputDir, fileName)
 
         mediaRecorder = MediaRecorder()
-        mediaRecorder?.setAudioSource((MediaRecorder.AudioSource.MIC))
-        mediaRecorder?.setOutputFormat((MediaRecorder.OutputFormat.MPEG_4))
+        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile.absolutePath)
 
         binding.homeRecord.isClickable = false
-//        if(binding.recordFin.visibility == View.VISIBLE || binding.recordCancel.visibility == View.VISIBLE
-//            || binding.recordSee.visibility == View.VISIBLE ){
-//            binding.homeRecord.isClickable = false
-//        }
 
         try {
             mediaRecorder?.prepare()
@@ -164,6 +175,24 @@ class HomeFragment : Fragment() {
                 "녹음 시작되었습니다",
                 Toast.LENGTH_SHORT
             ).show()
+
+            // 녹음이 완료된 후에 파일의 경로를 저장합니다.
+            recordedFilePath = outputFile.absolutePath
+            Log.d("파일 위치", "$recordedFilePath")
+
+            // 녹음이 완료된 후에 Speech-to-Text API로 변환 작업 시작
+            mediaRecorder?.setOnInfoListener { _, _, _ ->
+                mediaRecorder?.stop()
+                mediaRecorder?.reset()
+                mediaRecorder?.release()
+                state = false
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음이 종료되었습니다",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+
         } catch (e: IllegalStateException) {
             e.printStackTrace()
             Toast.makeText(

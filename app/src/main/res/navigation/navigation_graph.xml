@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/navigation_graph"
-    app:startDestination="@id/homeFragment">
+    app:startDestination="@id/homeFragment"
+    >
 
     <fragment
         android:id="@+id/homeFragment"
@@ -43,7 +44,7 @@
         tools:layout="@layout/fragment_chat" />
     <fragment
         android:id="@+id/emotionFragment"
-        android:name="com.example.dou.EmotionFragment"
-        android:label="fragment_emotion"
-        tools:layout="@layout/fragment_emotion" />
+        android:name="EmotionFragment"
+        android:label="EmotionFragment" />
+
 </navigation>
