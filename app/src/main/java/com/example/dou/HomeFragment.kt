@@ -24,7 +24,6 @@ import kotlin.random.Random
 class HomeFragment : Fragment() {
     private lateinit var binding: FragmentHomeBinding
     private val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 101
-    private val WRITE_EXTERNAL_STORAGE_PERMISSION_REQUEST_CODE = 102
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,6 +62,11 @@ class HomeFragment : Fragment() {
         val highlightedText = highlightSentencesInText(randomText, sentencesToHighlight, colorCode)
         binding.homeRandomText.text = highlightedText
 
+        if(binding.recordFin.visibility == View.VISIBLE || binding.recordCancel.visibility == View.VISIBLE
+            || binding.recordSee.visibility == View.VISIBLE ){
+            binding.homeRecord.isClickable = false
+        }
+
         binding.homeRecord.setOnClickListener {
             if (ContextCompat.checkSelfPermission(
                     requireContext(),
@@ -81,65 +85,24 @@ class HomeFragment : Fragment() {
                 startRecording()
 
                 binding.recordFin.visibility = View.VISIBLE
+                binding.recordCancel.visibility = View.VISIBLE
                 binding.recordDesLayoutFirst.visibility = View.INVISIBLE
                 binding.recordDesLayout1.visibility = View.VISIBLE
                 binding.recordDesLayout3.visibility = View.INVISIBLE
             }
         }
 
-//        binding.homeRecord.setOnClickListener {
-//            if (ContextCompat.checkSelfPermission(
-//                    requireContext(),
-//                    android.Manifest.permission.RECORD_AUDIO
-//                ) != PackageManager.PERMISSION_GRANTED ||
-//                ContextCompat.checkSelfPermission(
-//                    requireContext(),
-//                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-//                ) != PackageManager.PERMISSION_GRANTED
-//            ) {
-//                // Permission is not granted
-//                val permissions = arrayOf(
-//                    android.Manifest.permission.RECORD_AUDIO,
-//                    android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-//                    android.Manifest.permission.READ_EXTERNAL_STORAGE
-//                )
-//                ActivityCompat.requestPermissions(
-//                    requireActivity(),
-//                    permissions,
-//                    RECORD_AUDIO_PERMISSION_REQUEST_CODE
-//                )
-//            } else {
-//                if (!state && binding.recordDesLayout3.visibility == View.VISIBLE) {
-//                    pauseRecording()
-//                    binding.recordFin.visibility = View.VISIBLE
-//                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-//                    binding.recordDesLayout1.visibility = View.VISIBLE
-//                    binding.recordDesLayout3.visibility = View.INVISIBLE
-//                }
-//                else if (!state && binding.recordDesLayout2.visibility == View.VISIBLE) {
-//                    binding.homeRecord.isClickable = false
-//                }
-//                else if (!state) {
-//                    startRecording()
-//                    binding.recordFin.visibility = View.VISIBLE
-//                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-//                    binding.recordDesLayout1.visibility = View.VISIBLE
-//                    binding.recordDesLayout3.visibility = View.INVISIBLE
-//                } else {
-//                    pauseRecording()
-//                    binding.recordFin.visibility = View.INVISIBLE // 재생 버튼으로 변경하거나 숨기거나
-//                    binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-//                    binding.recordDesLayout1.visibility = View.INVISIBLE
-//                    binding.recordDesLayout3.visibility = View.VISIBLE
-//                }
-//            }
-//        }
+        // "record_cancel" 버튼 클릭 이벤트 처리
+        binding.recordCancel.setOnClickListener {
+            cancelRecording()
+        }
 
         binding.recordFin.setOnClickListener {
             if (state) {
                 stopRecording()
                 binding.recordFin.visibility = View.INVISIBLE
                 binding.recordSee.visibility = View.VISIBLE
+                binding.recordCancel.visibility = View.INVISIBLE
                 binding.recordDesLayout2.visibility = View.VISIBLE
                 binding.recordDesLayout1.visibility = View.INVISIBLE
             }
@@ -147,60 +110,33 @@ class HomeFragment : Fragment() {
         return binding.root
     }
 
-//    private fun startRecording() {
-//        //config and create MediaRecorder Object
-//        val fileName: String = Date().time.toString() + ".mp3"
-//        output =
-//            Environment.getExternalStorageDirectory().absolutePath + "/Download/" + fileName //내장메모리 밑에 위치
-//        mediaRecorder = MediaRecorder()
-//        mediaRecorder?.setAudioSource((MediaRecorder.AudioSource.MIC))
-//        mediaRecorder?.setOutputFormat((MediaRecorder.OutputFormat.MPEG_4))
-//        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-//        mediaRecorder?.setOutputFile(output)
-//
-//        try {
-//            mediaRecorder?.prepare()
-//            mediaRecorder?.start()
-//            state = true
-//            Toast.makeText(
-//                requireContext().applicationContext,
-//                "녹음 시작되었습니다",
-//                Toast.LENGTH_SHORT
-//            ).show()
-//        } catch (e: IllegalStateException) {
-//            e.printStackTrace()
-//        } catch (e: IOException) {
-//            e.printStackTrace()
-//        }
-//    }
-
-//    private fun pauseRecording() {
-//        if (state) {
-//            mediaRecorder?.pause()
-//            state = false
-//            Toast.makeText(
-//                requireContext().applicationContext,
-//                "녹음을 일시중지합니다",
-//                Toast.LENGTH_SHORT
-//            ).show()
-//        } else {
-//            if (binding.recordDesLayout3.visibility == View.VISIBLE) {
-//                mediaRecorder?.resume()
-//                state = true
-//                Toast.makeText(
-//                    requireContext().applicationContext,
-//                    "녹음이 다시 시작되었습니다",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            } else {
-//                Toast.makeText(
-//                    requireContext().applicationContext,
-//                    "녹음 중이 아닙니다.",
-//                    Toast.LENGTH_SHORT
-//                ).show()
-//            }
-//        }
-//    }
+    private fun cancelRecording() {
+        if (state) {
+            // 녹음 중이면 녹음 중지
+            stopRecording()
+            //binding.recordFin.visibility = View.VISIBLE
+            binding.recordDesLayoutFirst.visibility = View.VISIBLE
+            binding.recordFin.visibility = View.INVISIBLE
+            binding.recordCancel.visibility = View.INVISIBLE
+            binding.recordDesLayout1.visibility = View.INVISIBLE
+            binding.recordDesLayout3.visibility = View.INVISIBLE
+        }
+        // 저장 중이던 파일이 있으면 삭제
+        output?.let {
+            val file = File(it)
+            if (file.exists()) {
+                file.delete()
+            }
+        }
+        // 녹음 상태 초기화
+        state = false
+        // 취소 메시지 표시
+        Toast.makeText(
+            requireContext().applicationContext,
+            "녹음이 취소되었습니다",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
     private fun startRecording() {
         val fileName: String = Date().time.toString() + ".mp3"
@@ -212,6 +148,12 @@ class HomeFragment : Fragment() {
         mediaRecorder?.setOutputFormat((MediaRecorder.OutputFormat.MPEG_4))
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile.absolutePath)
+
+        binding.homeRecord.isClickable = false
+//        if(binding.recordFin.visibility == View.VISIBLE || binding.recordCancel.visibility == View.VISIBLE
+//            || binding.recordSee.visibility == View.VISIBLE ){
+//            binding.homeRecord.isClickable = false
+//        }
 
         try {
             mediaRecorder?.prepare()
@@ -245,11 +187,15 @@ class HomeFragment : Fragment() {
             mediaRecorder?.reset()
             mediaRecorder?.release()
             state = false
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음이 완료 되었습니다",
-                Toast.LENGTH_SHORT
-            ).show()
+
+            if(binding.recordCancel.visibility != View.VISIBLE)
+            {
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음이 완료 되었습니다",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         } else {
             Toast.makeText(
                 requireContext().applicationContext,
