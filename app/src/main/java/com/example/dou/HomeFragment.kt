@@ -209,14 +209,15 @@ class HomeFragment : Fragment() {
 
     // 녹음을 진행하고 파일을 생성함, 녹음 진행 후에 저장하는 것은 createAudioFile()에서 함
     // 파일이 사용자에게 저장될 위치와 이름을 선택받기 위해서 추가작업이 필요하기 때문에 createAudioFile()을 사용하는 것
+    // 녹음을 시작하고 파일 생성
     private fun startRecording() {
         val fileName: String = "audio_${Date().time}.mp3"
-        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         val outputFile = File(outputDir, fileName)
 
+        // 녹음 파일을 생성하고 녹음 설정
         mediaRecorder = MediaRecorder()
         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        //mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_2_TS)
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile.absolutePath)
@@ -230,6 +231,9 @@ class HomeFragment : Fragment() {
                 "녹음을 시작했습니다.",
                 Toast.LENGTH_SHORT
             ).show()
+
+            // 녹음 파일 경로 저장
+            output = outputFile.absolutePath
 
         } catch (e: IllegalStateException) {
             e.printStackTrace()
@@ -248,6 +252,7 @@ class HomeFragment : Fragment() {
         }
     }
 
+    // 녹음 중지 및 오디오 파일 생성
     private fun stopRecording() {
         if (state) {
             mediaRecorder?.stop()
@@ -261,8 +266,9 @@ class HomeFragment : Fragment() {
                 Toast.LENGTH_SHORT
             ).show()
 
-            // Create a document for the recorded file
+            // 녹음 파일 생성
             createAudioFile()
+
         } else {
             Toast.makeText(
                 requireContext().applicationContext,
@@ -274,61 +280,53 @@ class HomeFragment : Fragment() {
 
     // 사용자가 이름을 Date를 이용해서 고유한 이름을 가지도록 함
     private fun createAudioFile() {
-        val fileName = "audio_${Date().time}.mp3"
-        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
-        val outputFile = File(outputDir, fileName)
+        output?.let { filePath ->
+            val file = File(filePath)
+            if (file.exists()) {
+                val values = ContentValues().apply {
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, file.name)
+                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/mp3")
+                    put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
+                }
 
-        // 파일의 URI 생성
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
-            put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3")
-            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
-        }
+                val resolver = requireContext().contentResolver
+                val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
 
-        val resolver = requireContext().contentResolver
-        val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, contentValues)
-
-        // 녹음 파일을 복사하여 저장
-        try {
-            val inputStream = FileInputStream(outputFile)
-            uri?.let {
-                val outputStream = resolver.openOutputStream(it)
-                inputStream.copyTo(outputStream!!)
-                outputStream?.close()
+                try {
+                    val inputStream = file.inputStream()
+                    uri?.let { targetUri ->
+                        val outputStream = resolver.openOutputStream(targetUri)
+                        outputStream?.use { outputStream ->
+                            inputStream.use { inputStream ->
+                                inputStream.copyTo(outputStream)
+                            }
+                        }
+                    }
+                    inputStream.close()
+                    createdFileUri = uri
+                    file.delete()
+                    onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
+                } catch (e: IOException) {
+                    Log.e("CreateAudioFile", "Error copying recorded file: ${e.message}")
+                    Toast.makeText(
+                        requireContext().applicationContext,
+                        "오디오 파일을 저장하는 중 오류가 발생했습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
-            inputStream.close()
-
-            // 저장된 파일의 URI를 저장
-            createdFileUri = uri
-
-            // 녹음 파일 삭제
-            outputFile.delete()
-
-            // onActivityResult() 함수를 호출하여 저장 여부 확인
-            onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
-        } catch (e: IOException) {
-            Log.e("CreateAudioFile", "Error copying recorded file: ${e.message}")
-            Toast.makeText(
-                requireContext().applicationContext,
-                "오디오 파일을 저장하는 중 오류가 발생했습니다.",
-                Toast.LENGTH_SHORT
-            ).show()
         }
     }
-
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == CREATE_FILE) {
             if (resultCode == Activity.RESULT_OK) {
-                // File creation success
                 Toast.makeText(
                     requireContext().applicationContext,
                     "오늘의 대화가 성공적으로 저장됐어!",
                     Toast.LENGTH_SHORT
                 ).show()
-
-                // Here you can do further operations with the recorded audio file
             } else {
                 Toast.makeText(
                     requireContext().applicationContext,
