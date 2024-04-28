@@ -65,6 +65,8 @@ class EmoFragment : Fragment() {
 
                 // 오디오 파일에서 음성 데이터를 가져와 ByteString으로 변환
                 val audioData = readAudioFile(audioUri)
+                Log.d("audioData", audioData.toString())
+                Log.d("audioUri", audioUri.toString())
 
                 Log.d("AudioData", "오디오 파일에서 음성 데이터 가져오기 완료")
 
