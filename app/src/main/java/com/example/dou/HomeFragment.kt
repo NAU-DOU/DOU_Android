@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.media.MediaRecorder
+import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
 import android.text.Spannable
@@ -30,9 +31,11 @@ class HomeFragment : Fragment() {
     private val CREATE_FILE = 1
     private val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 101
     private lateinit var binding: FragmentHomeBinding
-    private var recordedFilePath: String? = null
+    //private var recordedFilePath: String? = null
     private var mediaRecorder: MediaRecorder? = null
     private var state: Boolean = false
+
+    private var createdFileUri: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -145,14 +148,23 @@ class HomeFragment : Fragment() {
             }
         }
 
-        // recordSee 버튼의 클릭 이벤트 핸들러
         binding.recordSee.setOnClickListener {
             val navController = findNavController()
 
-            // 채팅 화면 테스트를 위한 action 잠시 추가
-            navController.navigate(R.id.action_homeFragment_to_emotionFragment)
-            Log.d("파일 위치", "$recordedFilePath")
+            // 생성된 파일의 URI가 있는지 확인하고 전달
+            createdFileUri?.let { uri ->
+                // Bundle에 데이터를 추가하여 EmotionFragment로 전달
+                val bundle = Bundle()
+                bundle.putString("fileUri", uri.toString())
+
+                // EmotionFragment로 이동하면서 Bundle 데이터 전달
+                navController.navigate(R.id.action_homeFragment_to_emoFragment2, bundle)
+            } ?: run {
+                // 생성된 파일의 URI가 없는 경우에 대한 처리
+                Toast.makeText(requireContext(), "파일이 아직 생성되지 않았습니다.", Toast.LENGTH_SHORT).show()
+            }
         }
+
 
         return binding.root
     }
@@ -214,9 +226,6 @@ class HomeFragment : Fragment() {
                 "녹음을 시작했습니다.",
                 Toast.LENGTH_SHORT
             ).show()
-
-            // Save the path of recorded file
-            recordedFilePath = outputFile.absolutePath
 
         } catch (e: IllegalStateException) {
             e.printStackTrace()
@@ -316,6 +325,11 @@ class HomeFragment : Fragment() {
                 "오늘의 대화가 성공적으로 저장됐어!",
                 Toast.LENGTH_SHORT
             ).show()
+
+            data?.data?.let { uri ->
+                // 생성된 파일의 URI를 저장
+                createdFileUri = uri
+            }
 
             // Here you can do further operations with the recorded audio file
         } else {

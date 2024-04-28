@@ -1,21 +1,17 @@
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
+package com.example.dou
+
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.Fragment
-import com.example.dou.R
-import com.example.dou.databinding.FragmentEmotionBinding
+import com.example.dou.databinding.FragmentEmoBinding
 import com.google.auth.oauth2.GoogleCredentials
+import com.google.cloud.speech.v1.LongRunningRecognizeMetadata
 import com.google.cloud.speech.v1.RecognitionAudio
 import com.google.cloud.speech.v1.RecognitionConfig
 import com.google.cloud.speech.v1.RecognizeRequest
@@ -26,8 +22,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-class EmotionFragment : Fragment() {
-    private lateinit var binding: FragmentEmotionBinding
+class EmoFragment : Fragment() {
+    private lateinit var binding: FragmentEmoBinding
     private lateinit var speechClient: SpeechClient
 
     override fun onCreateView(
@@ -36,7 +32,7 @@ class EmotionFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        binding = FragmentEmotionBinding.inflate(inflater, container, false)
+        binding = FragmentEmoBinding.inflate(inflater, container, false)
         binding.emoTxt.text = "변환 중..."
         return binding.root
     }

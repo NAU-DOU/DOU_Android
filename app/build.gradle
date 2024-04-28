@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId "com.example.dou"
         minSdk 24
-        targetSdk 33
+        targetSdk 34
         versionCode 1
         versionName "1.0"
 
@@ -38,28 +38,39 @@ android {
         exclude 'META-INF/INDEX.LIST'
         exclude 'META-INF/DEPENDENCIES'
     }
+
 }
 
 dependencies {
 
-    // Google STT 기능 사용을 위한 dependency
-    implementation 'com.google.cloud:google-cloud-speech:2.5.0'
-    // Google Cloud Speech-to-Text API와 통신하는 데 사용되는 라이브러리
-    implementation 'io.grpc:grpc-okhttp:1.41.0'
-    implementation 'com.google.auth:google-auth-library-oauth2-http:0.27.0'
-
     implementation 'androidx.fragment:fragment:1.6.2'
+
+    // Google API Client 라이브러리
+    implementation 'com.google.api-client:google-api-client:2.4.1'
+    implementation 'com.google.http-client:google-http-client-gson:1.44.1'
+    implementation 'com.google.http-client:google-http-client-android:1.44.1'
+
+    implementation 'io.grpc:grpc-android:1.63.0'
+    // Google Auth Library
+    implementation 'com.google.auth:google-auth-library-oauth2-http:1.23.0'
+
+    // Speech-to-Text API 클라이언트 라이브러리 (이미 추가했다면 중복으로 추가하지 않아도 됩니다)
+    implementation 'com.google.cloud:google-cloud-speech:2.5.0'
+    implementation 'io.grpc:grpc-okhttp:1.63.0'
+    //implementation 'com.google.cloud:google-cloud-speech:latest.version'
 
     // BottomNavigation
     def nav_version = "2.7.7"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
     implementation "androidx.navigation:navigation-ui-ktx:$nav_version"
 
-    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.core:core-ktx:1.13.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.5.0'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+
+    //implementation 'commons-codec:commons-codec:1.16.1'
 }
