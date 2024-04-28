@@ -2,6 +2,7 @@ package com.example.dou
 
 import android.Manifest
 import android.app.Activity
+import android.content.ContentValues
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -9,6 +10,7 @@ import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
+import android.provider.MediaStore
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.style.ForegroundColorSpan
@@ -23,6 +25,7 @@ import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.findNavController
 import com.example.dou.databinding.FragmentHomeBinding
 import java.io.File
+import java.io.FileInputStream
 import java.io.IOException
 import java.util.Date
 import kotlin.random.Random
@@ -213,7 +216,8 @@ class HomeFragment : Fragment() {
 
         mediaRecorder = MediaRecorder()
         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        //mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_2_TS)
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile.absolutePath)
 
@@ -271,12 +275,68 @@ class HomeFragment : Fragment() {
     // 사용자가 이름을 Date를 이용해서 고유한 이름을 가지도록 함
     private fun createAudioFile() {
         val fileName = "audio_${Date().time}.mp3"
-        val intent = Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
-            addCategory(Intent.CATEGORY_OPENABLE)
-            type = "audio/mpeg"
-            putExtra(Intent.EXTRA_TITLE, fileName)
+        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val outputFile = File(outputDir, fileName)
+
+        // 파일의 URI 생성
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, "audio/mp3")
+            put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
         }
-        startActivityForResult(intent, CREATE_FILE)
+
+        val resolver = requireContext().contentResolver
+        val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, contentValues)
+
+        // 녹음 파일을 복사하여 저장
+        try {
+            val inputStream = FileInputStream(outputFile)
+            uri?.let {
+                val outputStream = resolver.openOutputStream(it)
+                inputStream.copyTo(outputStream!!)
+                outputStream?.close()
+            }
+            inputStream.close()
+
+            // 저장된 파일의 URI를 저장
+            createdFileUri = uri
+
+            // 녹음 파일 삭제
+            outputFile.delete()
+
+            // onActivityResult() 함수를 호출하여 저장 여부 확인
+            onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
+        } catch (e: IOException) {
+            Log.e("CreateAudioFile", "Error copying recorded file: ${e.message}")
+            Toast.makeText(
+                requireContext().applicationContext,
+                "오디오 파일을 저장하는 중 오류가 발생했습니다.",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == CREATE_FILE) {
+            if (resultCode == Activity.RESULT_OK) {
+                // File creation success
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "오늘의 대화가 성공적으로 저장됐어!",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                // Here you can do further operations with the recorded audio file
+            } else {
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "오늘의 대화를 저장하지 못했어!",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
     }
 
     override fun onRequestPermissionsResult(
@@ -316,28 +376,4 @@ class HomeFragment : Fragment() {
         return spannableString
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == CREATE_FILE && resultCode == Activity.RESULT_OK) {
-            // File creation success
-            Toast.makeText(
-                requireContext().applicationContext,
-                "오늘의 대화가 성공적으로 저장됐어!",
-                Toast.LENGTH_SHORT
-            ).show()
-
-            data?.data?.let { uri ->
-                // 생성된 파일의 URI를 저장
-                createdFileUri = uri
-            }
-
-            // Here you can do further operations with the recorded audio file
-        } else {
-            Toast.makeText(
-                requireContext().applicationContext,
-                "오늘의 대화를 저장하지 못했어!",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-    }
 }
