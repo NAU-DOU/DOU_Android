@@ -1,33 +1,33 @@
 package com.example.dou
 
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
 import com.example.dou.databinding.FragmentEmoBinding
 import com.google.auth.oauth2.GoogleCredentials
-import com.google.cloud.speech.v1.LongRunningRecognizeMetadata
 import com.google.cloud.speech.v1.RecognitionAudio
 import com.google.cloud.speech.v1.RecognitionConfig
 import com.google.cloud.speech.v1.RecognizeRequest
 import com.google.cloud.speech.v1.SpeechClient
 import com.google.cloud.speech.v1.SpeechSettings
+import com.google.cloud.storage.BlobInfo
+import com.google.cloud.storage.StorageOptions
 import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
+
 
 class EmoFragment : Fragment() {
     private lateinit var binding: FragmentEmoBinding
     private lateinit var speechClient: SpeechClient
+
+    private val bucketName = "nau_dou"
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -46,13 +46,41 @@ class EmoFragment : Fragment() {
         val fileUri = arguments?.getString("fileUri")
         if (fileUri != null) {
             Log.d("FileUri", "fileUri가 존재합니다: $fileUri")
-            initializeSpeechClient(Uri.parse(fileUri))
+            uploadAudioToBucket(Uri.parse(fileUri))
         } else {
             Log.d("FileUri", "fileUri가 존재하지 않습니다.")
         }
     }
 
-    private fun initializeSpeechClient(audioUri: Uri) {
+    private fun uploadAudioToBucket(audioUri: Uri) {
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                // 오디오 파일을 읽고 Byte 배열로 변환
+                val audioData = readAudioFile(audioUri).toByteArray()
+
+                // Google Cloud Storage 클라이언트 초기화
+                val credentials = GoogleCredentials.fromStream(
+                    requireContext().resources.openRawResource(R.raw.naudou)
+                )
+                val storage = StorageOptions.newBuilder().setCredentials(credentials).build().service
+
+                // 버킷에 오디오 파일 업로드
+                storage.create(BlobInfo.newBuilder(bucketName, "audio_file.wav").build(), audioData)
+
+                // 버킷에 업로드된 오디오 파일의 URI 생성
+                val audioUriForSpeechToText = "gs://$bucketName/audio_file.wav"
+
+                Log.d("AudioURI", "오디오 파일이 버킷에 업로드되었습니다. URI: $audioUriForSpeechToText")
+
+                // Speech-to-Text 클라이언트 초기화 및 변환 요청
+                initializeSpeechClient(audioUriForSpeechToText)
+            } catch (e: Exception) {
+                Log.e("UploadAudio", "오디오 파일 업로드 중 오류 발생", e)
+            }
+        }
+    }
+
+    private fun initializeSpeechClient(audioUri: String) {
         GlobalScope.launch(Dispatchers.IO) {
             try {
                 // Speech-to-Text 클라이언트 초기화
@@ -66,16 +94,6 @@ class EmoFragment : Fragment() {
 
                 Log.d("SpeechClient", "Speech-to-Text 클라이언트 초기화 완료")
 
-                // 오디오 파일에서 음성 데이터를 가져와 ByteString으로 변환
-                val audioData = readAudioFile(audioUri)
-                Log.d("audioData", audioData.toString())
-                Log.d("audioUri", audioUri.toString())
-
-                Log.d("AudioData", "오디오 파일에서 음성 데이터 가져오기 완료")
-
-                // 아래의 코드를 통해서 제대로된 데이터가 넘어가는 것을 확인함 => 제대로 소리가 나고 있음
-                //playAudioFromByteString(audioData)
-
                 // RecognitionConfig 설정
                 val config = RecognitionConfig.newBuilder()
                     .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
@@ -87,7 +105,7 @@ class EmoFragment : Fragment() {
 
                 // RecognitionAudio 설정
                 val audio = RecognitionAudio.newBuilder()
-                    .setContent(audioData)
+                    .setUri(audioUri)
                     .build()
 
                 Log.d("RecognitionAudio", "RecognitionAudio 설정 완료")
@@ -145,23 +163,4 @@ class EmoFragment : Fragment() {
         } ?: throw IllegalStateException("InputStream이 null입니다.")
     }
 
-//    private fun playAudioFromByteString(audioData: ByteString) {
-//        try {
-//            // 바이트 스트림 데이터를 오디오 파일로 저장
-//            val audioFile = File(requireContext().cacheDir, "audio_data.wav")
-//            FileOutputStream(audioFile).use { outputStream ->
-//                audioData.writeTo(outputStream)
-//            }
-//
-//            // 저장된 오디오 파일을 재생
-//            val mediaPlayer = MediaPlayer().apply {
-//                setDataSource(audioFile.path)
-//                prepare()
-//                start()
-//            }
-//
-//        } catch (e: Exception) {
-//            Log.e("PlayAudio", "오디오 재생 중 오류 발생", e)
-//        }
-//    }
 }

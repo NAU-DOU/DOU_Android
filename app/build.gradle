@@ -59,6 +59,11 @@ dependencies {
     implementation 'io.grpc:grpc-okhttp:1.63.0'
     implementation 'com.google.cloud:google-cloud-speech:4.37.0'
 
+    // Google Cloud Storage
+    implementation platform('com.google.cloud:libraries-bom:25.4.0')
+    implementation 'com.google.cloud:google-cloud-storage'
+    implementation 'com.google.guava:guava'
+
     // BottomNavigation
     def nav_version = "2.7.7"
     implementation "androidx.navigation:navigation-fragment-ktx:$nav_version"
