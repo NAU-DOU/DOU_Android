@@ -1,5 +1,6 @@
 package com.example.dou
 
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -21,6 +22,8 @@ import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
 
 class EmoFragment : Fragment() {
     private lateinit var binding: FragmentEmoBinding
@@ -70,6 +73,9 @@ class EmoFragment : Fragment() {
 
                 Log.d("AudioData", "오디오 파일에서 음성 데이터 가져오기 완료")
 
+                // 아래의 코드를 통해서 제대로된 데이터가 넘어가는 것을 확인함 => 제대로 소리가 나고 있음
+                //playAudioFromByteString(audioData)
+
                 // RecognitionConfig 설정
                 val config = RecognitionConfig.newBuilder()
                     .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
@@ -85,6 +91,7 @@ class EmoFragment : Fragment() {
                     .build()
 
                 Log.d("RecognitionAudio", "RecognitionAudio 설정 완료")
+                Log.d("오디오 요청", audio.toString())
 
                 // RecognitionRequest 설정
                 val request = RecognizeRequest.newBuilder()
@@ -93,10 +100,12 @@ class EmoFragment : Fragment() {
                     .build()
 
                 Log.d("RecognitionRequest", "RecognitionRequest 설정 완료")
+                Log.d("요청 정보", request.toString())
 
                 // Speech-to-Text 변환 요청 보내기
                 val response = speechClient.recognize(request)
 
+                Log.d("응답 정보", response.toString())
                 Log.d("RecognitionRequest", "Speech-to-Text 변환 요청 보내기 완료")
 
                 // 변환된 텍스트 처리
@@ -107,13 +116,17 @@ class EmoFragment : Fragment() {
                 }
                 Log.d("변환한 내용", resultText)
 
+                // 변환된 텍스트 표시
+                val finalText = "변환 완료\n$resultText"
+                Log.e("변환 과정", finalText)
+
                 // UI 업데이트
                 launch(Dispatchers.Main) {
                     // 변환 완료 메시지 토스트 표시
                     Toast.makeText(requireContext(), "변환 완료", Toast.LENGTH_SHORT).show()
 
                     // 변환된 텍스트 표시
-                    binding.emoTxt.text = resultText
+                    binding.emoTxt.text = finalText
                 }
 
                 // 클라이언트 종료
@@ -131,4 +144,24 @@ class EmoFragment : Fragment() {
             return ByteString.readFrom(inputStream)
         } ?: throw IllegalStateException("InputStream이 null입니다.")
     }
+
+//    private fun playAudioFromByteString(audioData: ByteString) {
+//        try {
+//            // 바이트 스트림 데이터를 오디오 파일로 저장
+//            val audioFile = File(requireContext().cacheDir, "audio_data.wav")
+//            FileOutputStream(audioFile).use { outputStream ->
+//                audioData.writeTo(outputStream)
+//            }
+//
+//            // 저장된 오디오 파일을 재생
+//            val mediaPlayer = MediaPlayer().apply {
+//                setDataSource(audioFile.path)
+//                prepare()
+//                start()
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e("PlayAudio", "오디오 재생 중 오류 발생", e)
+//        }
+//    }
 }

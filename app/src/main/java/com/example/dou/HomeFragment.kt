@@ -34,7 +34,6 @@ class HomeFragment : Fragment() {
     private val CREATE_FILE = 1
     private val RECORD_AUDIO_PERMISSION_REQUEST_CODE = 101
     private lateinit var binding: FragmentHomeBinding
-    //private var recordedFilePath: String? = null
     private var mediaRecorder: MediaRecorder? = null
     private var state: Boolean = false
 
@@ -111,28 +110,6 @@ class HomeFragment : Fragment() {
             binding.recordDesLayoutFirst.visibility = View.INVISIBLE
             binding.recordDesLayout1.visibility = View.VISIBLE
             binding.recordDesLayout3.visibility = View.INVISIBLE
-//            if (ContextCompat.checkSelfPermission(
-//                    requireContext(),
-//                    android.Manifest.permission.RECORD_AUDIO
-//                ) != PackageManager.PERMISSION_GRANTED
-//            ) {
-//                // Permission is not granted
-//                val permissions = arrayOf(android.Manifest.permission.RECORD_AUDIO)
-//                ActivityCompat.requestPermissions(
-//                    requireActivity(),
-//                    permissions,
-//                    RECORD_AUDIO_PERMISSION_REQUEST_CODE
-//                )
-//            } else {
-//                // Permission is granted, start recording
-//                startRecording()
-//
-//                binding.recordFin.visibility = View.VISIBLE
-//                binding.recordCancel.visibility = View.VISIBLE
-//                binding.recordDesLayoutFirst.visibility = View.INVISIBLE
-//                binding.recordDesLayout1.visibility = View.VISIBLE
-//                binding.recordDesLayout3.visibility = View.INVISIBLE
-//            }
         }
 
         // "record_cancel" 버튼 클릭 이벤트 처리
@@ -260,11 +237,11 @@ class HomeFragment : Fragment() {
             mediaRecorder?.release()
             state = false
 
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음을 완료했습니다.",
-                Toast.LENGTH_SHORT
-            ).show()
+//            Toast.makeText(
+//                requireContext().applicationContext,
+//                "녹음을 완료했습니다.",
+//                Toast.LENGTH_SHORT
+//            ).show()
 
             // 녹음 파일 생성
             createAudioFile()
@@ -278,7 +255,6 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // 사용자가 이름을 Date를 이용해서 고유한 이름을 가지도록 함
     private fun createAudioFile() {
         output?.let { filePath ->
             val file = File(filePath)
@@ -305,6 +281,12 @@ class HomeFragment : Fragment() {
                     inputStream.close()
                     createdFileUri = uri
                     file.delete()
+
+                    // 저장된 파일의 경로와 URI를 로그로 출력
+                    Log.d("CreateAudioFile", "Saved file path: ${file.path}")
+                    Log.d("CreateAudioFile", "Saved file URI: $uri")
+                    Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
+
                     onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
                 } catch (e: IOException) {
                     Log.e("CreateAudioFile", "Error copying recorded file: ${e.message}")
@@ -327,6 +309,7 @@ class HomeFragment : Fragment() {
                     "오늘의 대화가 성공적으로 저장됐어!",
                     Toast.LENGTH_SHORT
                 ).show()
+
             } else {
                 Toast.makeText(
                     requireContext().applicationContext,
