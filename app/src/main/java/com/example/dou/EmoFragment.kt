@@ -8,7 +8,9 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.findNavController
 import com.example.dou.databinding.FragmentEmoBinding
+import com.github.ybq.android.spinkit.style.ThreeBounce
 import com.google.auth.oauth2.GoogleCredentials
 import com.google.cloud.speech.v1.LongRunningRecognizeRequest
 import com.google.cloud.speech.v1.LongRunningRecognizeResponse
@@ -35,7 +37,11 @@ class EmoFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentEmoBinding.inflate(inflater, container, false)
-        binding.emoTxt.text = "변환 중..."
+
+        val progressBar = binding.spinKit
+        val threeBounce = ThreeBounce()
+        progressBar.setIndeterminateDrawable(threeBounce)
+
         return binding.root
     }
 
@@ -46,9 +52,6 @@ class EmoFragment : Fragment() {
         if (fileUri != null) {
             Log.d("FileUri", "fileUri가 존재합니다: $fileUri")
 
-            // 여기 코드가 제대로 작동하는걸 보면 파일자체에 문제는 없어보임. file이 현재 버킷으로 저장되면서 발생하는 오류인 것 같음..
-//            val audioTest = readAudioFile(Uri.parse(fileUri))
-//            playAudioFromByteString(audioTest)
             uploadAudioToBucket(Uri.parse(fileUri))
         } else {
             Log.d("FileUri", "fileUri가 존재하지 않습니다.")
@@ -79,8 +82,6 @@ class EmoFragment : Fragment() {
                 val audioUriForSpeechToText = "gs://$bucketName/audio_file.flac"
 
                 Log.d("AudioURI", "오디오 파일이 버킷에 업로드되었습니다. URI: $audioUriForSpeechToText")
-
-                //playAudioFromCloudStorage(audioUriForSpeechToText)
 
                 // Speech-to-Text 클라이언트 초기화 및 변환 요청
                 initializeSpeechClient(audioUriForSpeechToText)
@@ -143,30 +144,14 @@ class EmoFragment : Fragment() {
             } finally {
                 // 클라이언트 종료
                 speechClient.close()
+                requireActivity().runOnUiThread {
+                    findNavController().navigate(R.id.action_emoFragment2_to_chatFragment)
+                }
+                //findNavController().navigate(R.id.action_emoFragment2_to_chatFragment)
                 Log.d("SpeechClient", "Speech-to-Text 클라이언트 종료")
             }
         }
     }
-
-//    private fun playAudioFromByteString(audioData: ByteString) {
-//        try {
-//            // 바이트 스트림 데이터를 오디오 파일로 저장
-//            val audioFile = File(requireContext().cacheDir, "audio_data.wav")
-//            FileOutputStream(audioFile).use { outputStream ->
-//                audioData.writeTo(outputStream)
-//            }
-//
-//            // 저장된 오디오 파일을 재생
-//            val mediaPlayer = MediaPlayer().apply {
-//                setDataSource(audioFile.path)
-//                prepare()
-//                start()
-//            }
-//
-//        } catch (e: Exception) {
-//            Log.e("PlayAudio", "오디오 재생 중 오류 발생", e)
-//        }
-//    }
 
     private fun handleResponse(response: LongRunningRecognizeResponse) {
         // 결과 리스트를 가져옵니다.
@@ -190,12 +175,6 @@ class EmoFragment : Fragment() {
             }
         }
     }
-
-    /*private fun readAudioFile(audioUri: Uri): ByteString {
-        requireContext().contentResolver.openInputStream(audioUri)?.use { inputStream ->
-            return ByteString.readFrom(inputStream)
-        } ?: throw IllegalStateException("InputStream이 null입니다.")
-    }*/
 
     private fun readAudioFile(audioUri: Uri): ByteArray {
         requireContext().contentResolver.openInputStream(audioUri)?.use { inputStream ->

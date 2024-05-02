@@ -82,4 +82,7 @@ dependencies {
 
     // mp3 => flac으로 확장자 변경
     implementation 'com.arthenica:mobile-ffmpeg-full:4.4'
+
+    // 로딩 화면 구현중
+    implementation 'com.github.ybq:Android-SpinKit:1.4.0'
 }

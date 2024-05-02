@@ -3,16 +3,90 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:padding="30dp"
     android:background="@color/background_color"
     tools:context=".EmoFragment">
 
     <TextView
-        android:id="@+id/emo_txt"
+        android:id="@+id/emo_title"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="STT 기능으로 받아온 녹음 내용"
-        android:fontFamily="@font/pretendardmedium"
+        android:layout_height="wrap_content"
+        android:text="DOU"
+        android:fontFamily="@font/promptbold"
         android:textColor="@color/white"
-        android:textSize="20dp"/>
+        android:textAlignment="center"
+        android:textSize="30dp">
+    </TextView>
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/emo_title"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:id="@+id/couple_dou"
+            android:layout_width="200dp"
+            android:layout_height="247dp"
+            android:src="@drawable/couple_dou"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/emo_txt"
+            app:layout_constraintStart_toStartOf="parent">
+
+        </ImageView>
+
+        <com.github.ybq.android.spinkit.SpinKitView
+            app:layout_constraintTop_toBottomOf="@id/couple_dou"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toTopOf="@id/emo_txt"
+            android:id="@+id/spin_kit"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="40dp"
+            style="@style/SpinKitView.Large.ThreeBounce"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            app:SpinKit_Color="#A3F5A6" />
+
+
+        <TextView
+            android:id="@+id/emo_txt"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="감정 치료 도우미 도우가"
+            android:fontFamily="@font/pretendardextrabold"
+            android:textColor="@color/white"
+            android:textAlignment="center"
+            android:textSize="20sp">
+        </TextView>
+
+        <TextView
+            android:id="@+id/emo_txt2"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/emo_txt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="감정 분석중..."
+            android:fontFamily="@font/pretendardextrabold"
+            android:textColor="@color/point_color"
+            android:textAlignment="center"
+            android:textSize="20sp">
+        </TextView>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>

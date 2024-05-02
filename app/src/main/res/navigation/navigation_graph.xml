@@ -46,6 +46,10 @@
         android:id="@+id/emoFragment2"
         android:name="com.example.dou.EmoFragment"
         android:label="fragment_emo"
-        tools:layout="@layout/fragment_emo" />
+        tools:layout="@layout/fragment_emo" >
+        <action
+            android:id="@+id/action_emoFragment2_to_chatFragment"
+            app:destination="@id/chatFragment" />
+    </fragment>
 
 </navigation>
