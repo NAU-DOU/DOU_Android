@@ -1,6 +1,5 @@
 package com.example.dou
 
-import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -19,12 +18,8 @@ import com.google.cloud.speech.v1.SpeechClient
 import com.google.cloud.speech.v1.SpeechSettings
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.StorageOptions
-import com.google.protobuf.ByteString
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.io.File
-import java.io.FileOutputStream
 
 
 class EmoFragment : Fragment() {
@@ -73,15 +68,15 @@ class EmoFragment : Fragment() {
                 )
                 val storage = StorageOptions.newBuilder().setCredentials(credentials).build().service
 
-                val blobInfo = BlobInfo.newBuilder(bucketName, "audio_file.mp3")
-                    .setContentType("audio/mpeg")
+                val blobInfo = BlobInfo.newBuilder(bucketName, "audio_file.flac")
+                    .setContentType("audio/flac")
                     .build()
 
                 // 버킷에 오디오 파일 업로드
                 storage.create(blobInfo, audioData)
 
                 // 버킷에 업로드된 오디오 파일의 URI 생성
-                val audioUriForSpeechToText = "gs://$bucketName/audio_file.mp3"
+                val audioUriForSpeechToText = "gs://$bucketName/audio_file.flac"
 
                 Log.d("AudioURI", "오디오 파일이 버킷에 업로드되었습니다. URI: $audioUriForSpeechToText")
 
@@ -96,7 +91,7 @@ class EmoFragment : Fragment() {
     }
 
     private fun initializeSpeechClient(audioUri: String) {
-        GlobalScope.launch(Dispatchers.IO) {
+        lifecycleScope.launch(Dispatchers.IO) {
             try {
                 // Speech-to-Text 클라이언트 초기화
                 val credentials = GoogleCredentials.fromStream(
@@ -111,9 +106,10 @@ class EmoFragment : Fragment() {
 
                 // RecognitionConfig 설정
                 val config = RecognitionConfig.newBuilder()
-                    .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
-                    .setSampleRateHertz(16000)
+                    .setEncoding(RecognitionConfig.AudioEncoding.FLAC)
+                    .setSampleRateHertz(8000)
                     .setLanguageCode("ko-KR")
+                    .setAudioChannelCount(1)
                     .build()
 
                 Log.d("RecognitionConfig", "RecognitionConfig 설정 완료")
@@ -135,38 +131,12 @@ class EmoFragment : Fragment() {
                 Log.d("RecognitionRequest", "RecognitionRequest 설정 완료")
                 Log.d("요청 정보", request.toString())
 
-//                val response =
-//                    speechClient.longRunningRecognizeAsync(config, audio).get()
-
                 val response = speechClient.longRunningRecognizeAsync(request).get()
 
-//                while (!response.redone) {
-//                    Log.d("Response", "변환 중...")
-//                    withContext(Dispatchers.Main) {
-//                        binding.emoTxt.text = "변환 중..." // 작업이 완료될 때까지 UI 업데이트
-//                    }
-//                    delay(10000) // 10초마다 다시 확인
-//                }
                 Log.d("Response", "아직 변환 중...")
 
                 Log.d("while문 탈출", "response.done이 드디어 true?")
                 handleResponse(response)
-
-//                val operation = async { speechClient.longRunningRecognizeCallable().call(request) }
-//
-//                // 결과 대기
-//                var response = operation.await()
-//
-//                while (!response.done) {
-//                    Log.d("Response", "변환 중...")
-//                    withContext(Dispatchers.Main) {
-//                        binding.emoTxt.text = "변환 중..." // 작업이 완료될 때까지 UI 업데이트
-//                    }
-//                    response = speechClient.getOperation(request.name)
-//                    delay(10000) // 10초마다 다시 확인
-//                }
-//                Log.d("while문 탈출", "response.done이 드디어 true?")
-//                handleResponse(response)
 
             } catch (e: Exception) {
                 Log.e("RecognitionRequest", "Speech-to-Text 변환 요청 중 오류 발생", e)
@@ -178,25 +148,25 @@ class EmoFragment : Fragment() {
         }
     }
 
-    private fun playAudioFromByteString(audioData: ByteString) {
-        try {
-            // 바이트 스트림 데이터를 오디오 파일로 저장
-            val audioFile = File(requireContext().cacheDir, "audio_data.wav")
-            FileOutputStream(audioFile).use { outputStream ->
-                audioData.writeTo(outputStream)
-            }
-
-            // 저장된 오디오 파일을 재생
-            val mediaPlayer = MediaPlayer().apply {
-                setDataSource(audioFile.path)
-                prepare()
-                start()
-            }
-
-        } catch (e: Exception) {
-            Log.e("PlayAudio", "오디오 재생 중 오류 발생", e)
-        }
-    }
+//    private fun playAudioFromByteString(audioData: ByteString) {
+//        try {
+//            // 바이트 스트림 데이터를 오디오 파일로 저장
+//            val audioFile = File(requireContext().cacheDir, "audio_data.wav")
+//            FileOutputStream(audioFile).use { outputStream ->
+//                audioData.writeTo(outputStream)
+//            }
+//
+//            // 저장된 오디오 파일을 재생
+//            val mediaPlayer = MediaPlayer().apply {
+//                setDataSource(audioFile.path)
+//                prepare()
+//                start()
+//            }
+//
+//        } catch (e: Exception) {
+//            Log.e("PlayAudio", "오디오 재생 중 오류 발생", e)
+//        }
+//    }
 
     private fun handleResponse(response: LongRunningRecognizeResponse) {
         // 결과 리스트를 가져옵니다.
