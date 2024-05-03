@@ -66,6 +66,7 @@ dependencies {
 
     // coroutine
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    implementation 'androidx.activity:activity:1.8.0'
 
     // BottomNavigation
     def nav_version = "2.7.7"

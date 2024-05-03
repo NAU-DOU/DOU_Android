@@ -1,14 +1,12 @@
 package com.example.dou
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.navigation.fragment.NavHostFragment.Companion.findNavController
+import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.dou.databinding.FragmentHomeBinding
 import com.example.dou.databinding.FragmentListBinding
 
 class ListFragment : Fragment() {
@@ -43,7 +41,7 @@ class ListFragment : Fragment() {
             val navController = findNavController()
 
             // 채팅 화면 테스트를 위한 action 잠시 추가
-            navController.navigate(R.id.action_listFragment_to_chatFragment)
+            navController.navigate(R.id.action_listFragment_to_chatActivity)
             //navController.navigate(R.id.action_listFragment_to_homeFragment)
         }
 

@@ -2,15 +2,13 @@ package com.example.dou
 
 import android.graphics.Rect
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.dou.databinding.FragmentCalendarBinding
 import com.example.dou.databinding.FragmentChatBinding
-import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class ChatFragment : Fragment() {
     private lateinit var binding: FragmentChatBinding
@@ -32,6 +30,9 @@ class ChatFragment : Fragment() {
         binding.chatRecycler.layoutManager = LinearLayoutManager(requireContext())
         binding.chatRecycler.adapter = adapter
 
+        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNavi)
+        bottomNav.visibility = View.GONE
+
         binding.sendBtn.setOnClickListener {
             sendMessage()
         }
@@ -43,9 +44,9 @@ class ChatFragment : Fragment() {
             val screenHeight = binding.editTxt.rootView.height
             val keypadHeight = screenHeight - r.bottom
             if (keypadHeight > screenHeight * 0.15) { // if keypad height > 15% of the screen height
-                hideBottomNavigation()
+                //hideBottomNavigation()
             } else {
-                showBottomNavigation()
+                //showBottomNavigation()
 
                 // 키보드가 닫혔을 때 NestedScrollView를 항상 마지막 부분으로 스크롤
                 binding.chatLayout.post {
@@ -94,17 +95,14 @@ class ChatFragment : Fragment() {
     }
 
     // 하단 네비게이션 바를 숨기는 함수
-    private fun hideBottomNavigation() {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNavi)
-        bottomNav.visibility = View.GONE
-    }
 
-    // 하단 네비게이션 바를 보여주는 함수
-    private fun showBottomNavigation() {
-        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNavi)
-        bottomNav.visibility = View.VISIBLE
-    }
-    // RecyclerView를 마지막 아이템의 위치로 스크ㅗㄹ. 항상 마지막 채팅 메시지가 보이도록
+
+//    // 하단 네비게이션 바를 보여주는 함수
+//    private fun showBottomNavigation() {
+//        val bottomNav = requireActivity().findViewById<View>(R.id.bottomNavi)
+//        bottomNav.visibility = View.VISIBLE
+//    }
+    // RecyclerView를 마지막 아이템의 위치로 스크롤. 항상 마지막 채팅 메시지가 보이도록
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.chatRecycler.scrollToPosition(chatItems.size - 1)

@@ -31,6 +31,9 @@
         <action
             android:id="@+id/action_listFragment_to_chatFragment"
             app:destination="@id/chatFragment" />
+        <action
+            android:id="@+id/action_listFragment_to_chatActivity"
+            app:destination="@id/chatActivity" />
     </fragment>
     <fragment
         android:id="@+id/userFragment"
@@ -51,5 +54,10 @@
             android:id="@+id/action_emoFragment2_to_chatFragment"
             app:destination="@id/chatFragment" />
     </fragment>
+    <activity
+        android:id="@+id/chatActivity"
+        android:name="com.example.dou.ChatActivity"
+        android:label="activity_chat"
+        tools:layout="@layout/activity_chat" />
 
 </navigation>
