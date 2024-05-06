@@ -163,8 +163,8 @@ class EmoFragment : Fragment() {
             return
         }
 
-        // 문장들을 저장할 리스트 생성
-        val sentences = mutableListOf<String>()
+        // 문장들을 저장할 변수 생성
+        var sentences = ""
 
         // 결과가 있을 경우 각 결과를 처리합니다.
         for (result in resultsList) {
@@ -174,18 +174,14 @@ class EmoFragment : Fragment() {
                 // 텍스트 추출
                 val transcript = alternative.transcript
 
-                // .으로 문장을 구분하여 각 문장을 분리하여 리스트에 추가
-                val sentencesInTranscript = transcript.split(".")
-                sentences.addAll(sentencesInTranscript)
+                // 각 문장 끝에 \n을 붙여서 sentences 변수에 추가합니다.
+                val formattedTranscript = transcript.replace(".", ".\\n")
+                sentences += formattedTranscript
 
                 // UI에 텍스트 표시 또는 다른 처리 수행
                 Log.d("handleResponse", "Transcript: $transcript")
+                Log.d("문장 모음", "$sentences")
             }
-        }
-
-        // 문장 리스트 출력 또는 다른 처리 수행
-        for (sentence in sentences) {
-            Log.d("handleResponse", "Sentence: $sentence")
         }
     }
 
