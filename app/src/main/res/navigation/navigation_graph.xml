@@ -53,6 +53,9 @@
         <action
             android:id="@+id/action_emoFragment2_to_chatFragment"
             app:destination="@id/chatFragment" />
+        <action
+            android:id="@+id/action_emoFragment2_to_chatActivity"
+            app:destination="@id/chatActivity" />
     </fragment>
     <activity
         android:id="@+id/chatActivity"

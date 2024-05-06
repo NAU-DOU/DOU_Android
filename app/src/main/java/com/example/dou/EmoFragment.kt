@@ -23,8 +23,8 @@ import com.google.cloud.storage.StorageOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 class EmoFragment : Fragment() {
+
     private lateinit var binding: FragmentEmoBinding
     private lateinit var speechClient: SpeechClient
 
@@ -111,6 +111,7 @@ class EmoFragment : Fragment() {
                     .setSampleRateHertz(8000)
                     .setLanguageCode("ko-KR")
                     .setAudioChannelCount(1)
+                    .setEnableAutomaticPunctuation(true)
                     .build()
 
                 Log.d("RecognitionConfig", "RecognitionConfig 설정 완료")
@@ -145,9 +146,8 @@ class EmoFragment : Fragment() {
                 // 클라이언트 종료
                 speechClient.close()
                 requireActivity().runOnUiThread {
-                    findNavController().navigate(R.id.action_emoFragment2_to_chatFragment)
+                    findNavController().navigate(R.id.action_emoFragment2_to_chatActivity)
                 }
-                //findNavController().navigate(R.id.action_emoFragment2_to_chatFragment)
                 Log.d("SpeechClient", "Speech-to-Text 클라이언트 종료")
             }
         }
@@ -163,6 +163,9 @@ class EmoFragment : Fragment() {
             return
         }
 
+        // 문장들을 저장할 리스트 생성
+        val sentences = mutableListOf<String>()
+
         // 결과가 있을 경우 각 결과를 처리합니다.
         for (result in resultsList) {
             // 결과의 alternative들을 가져와서 출력합니다.
@@ -170,15 +173,27 @@ class EmoFragment : Fragment() {
             for (alternative in alternativesList) {
                 // 텍스트 추출
                 val transcript = alternative.transcript
+
+                // .으로 문장을 구분하여 각 문장을 분리하여 리스트에 추가
+                val sentencesInTranscript = transcript.split(".")
+                sentences.addAll(sentencesInTranscript)
+
                 // UI에 텍스트 표시 또는 다른 처리 수행
                 Log.d("handleResponse", "Transcript: $transcript")
             }
         }
+
+        // 문장 리스트 출력 또는 다른 처리 수행
+        for (sentence in sentences) {
+            Log.d("handleResponse", "Sentence: $sentence")
+        }
     }
+
 
     private fun readAudioFile(audioUri: Uri): ByteArray {
         requireContext().contentResolver.openInputStream(audioUri)?.use { inputStream ->
             return inputStream.readBytes()
         } ?: throw IllegalStateException("InputStream이 null입니다.")
     }
+
 }
