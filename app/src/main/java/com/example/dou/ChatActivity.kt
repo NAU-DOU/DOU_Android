@@ -46,7 +46,7 @@ class ChatActivity : AppCompatActivity() {
                 maxTokens = 100
             )
 
-            val apiKey = OpenAI.getApiKey()
+            val apiKey = BuildConfig.API_KEY
             Log.d("apikey", "$apiKey")
             OpenAI.service.sendMessage(apiKey,request).enqueue(object : Callback<OpenAIDataClass.Response> {
                 override fun onResponse(call: Call<OpenAIDataClass.Response>, response: Response<OpenAIDataClass.Response>) {
@@ -78,4 +78,5 @@ class ChatActivity : AppCompatActivity() {
         adapter.notifyItemInserted(chatItems.size - 1)
         binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
     }
+
 }
