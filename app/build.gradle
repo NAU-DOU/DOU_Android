@@ -67,6 +67,7 @@ dependencies {
     // coroutine
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
     implementation 'androidx.activity:activity:1.9.0'
+    implementation 'com.google.ai.client.generativeai:common:0.3.0'
 
     // BottomNavigation
     def nav_version = "2.7.7"
@@ -88,4 +89,8 @@ dependencies {
     implementation 'com.github.ybq:Android-SpinKit:1.4.0'
 
     implementation 'com.github.shin285:KOMORAN:3.3.9'
+
+    // GPT API 사용
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
 }
