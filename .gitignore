@@ -15,4 +15,4 @@
 local.properties
 app/src/main/res/raw/naudou.json
 app/src/main/res/raw/openai.kt
-app/src/main/java/com.example.dou/OpenAI
+app/src/main/java/com/example/dou/OpenAI
