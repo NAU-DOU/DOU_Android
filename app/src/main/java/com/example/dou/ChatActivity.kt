@@ -6,14 +6,24 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivityChatBinding
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import model.Message
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.json.JSONArray
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
 
 class ChatActivity : AppCompatActivity() {
     private lateinit var binding: ActivityChatBinding
     private lateinit var adapter: ChatAdapter
     private val chatItems = mutableListOf<ChatItem>()
+
+    private val messageList = ArrayList<Message>()
+    private val JSON = "application/json; charset=utf-8".toMediaType()
+    private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,45 +48,103 @@ class ChatActivity : AppCompatActivity() {
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
             binding.editTxt.text.clear()
 
-            // OpenAI API를 통해 답변을 받음
-            val request = OpenAIDataClass.Request(
-                model = "gpt-3.5-turbo",
-                prompt = message,
-                temperature = 0.7f,
-                maxTokens = 100
-            )
+            // 보낸 메시지를 messageList에 추가
+            val sentMessage = Message("me", message)
+            messageList.add(sentMessage)
 
             val apiKey = BuildConfig.API_KEY
-            Log.d("apikey", "$apiKey")
-            OpenAI.service.sendMessage(apiKey,request).enqueue(object : Callback<OpenAIDataClass.Response> {
-                override fun onResponse(call: Call<OpenAIDataClass.Response>, response: Response<OpenAIDataClass.Response>) {
-                    if (response.isSuccessful) {
-                        val aiResponse = response.body()?.choices?.get(0)?.text
-                        aiResponse?.let { receiveMessage(it) }
-                    } else {
-                        // API 요청이 실패한 경우 응답 코드와 메시지를 로그로 출력
-                        val errorMessage = "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
-                        Log.e("API Communication", errorMessage)
-                        // API 요청이 실패한 경우 에러 메시지 표시
-                        Toast.makeText(this@ChatActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            Log.d("apikey", apiKey)
 
-                override fun onFailure(call: Call<OpenAIDataClass.Response>, t: Throwable) {
-                    // 통신 실패 시 에러 메시지 표시
-                    Toast.makeText(this@ChatActivity, "통신 실패: ${t.message}", Toast.LENGTH_SHORT).show()
-                }
-            })
+            val arr = JSONArray()
+            val baseAi = JSONObject()
+            val userMsg = JSONObject()
+            try {
+                baseAi.put("role", "user")
+                baseAi.put("content", "당신과 나는 오랫동안 알고 지낸 소꿉친구입니다, 반말로 편안하고 친근한 말투로 대답해주세요.")
+
+                userMsg.put("role", "user")
+                userMsg.put("content", message)
+
+                arr.put(baseAi)
+                arr.put(userMsg)
+            } catch (e: JSONException) {
+                throw RuntimeException(e)
+            }
+
+            val jsonObject = JSONObject()
+            try {
+                jsonObject.put("model", "gpt-3.5-turbo")
+                jsonObject.put("messages", arr)
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
+
+            val body = RequestBody.create(JSON, jsonObject.toString())
+            val request = Request.Builder()
+                .url("https://api.openai.com/v1/chat/completions")
+                .header("Authorization", "Bearer $apiKey")
+                .post(body)
+                .build()
+
+            try {
+                val call = client.newCall(request)
+                call.enqueue(object : okhttp3.Callback {
+                    override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                        if (response.isSuccessful) {
+                            val responseBody = response.body?.string()
+                            responseBody?.let {
+                                try {
+                                    val jsonObject = JSONObject(it)
+                                    val jsonArray = jsonObject.getJSONArray("choices")
+                                    if (jsonArray.length() > 0) {
+                                        val content = jsonArray.getJSONObject(0).getJSONObject("message").getString("content")
+                                        receiveMessage(content)
+                                    } else {
+                                        Log.e("API Communication", "No choices found in response.")
+                                        Toast.makeText(this@ChatActivity, "응답에서 선택지를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: JSONException) {
+                                    Log.e("API Communication", "Error parsing JSON response: $it", e)
+                                    Toast.makeText(this@ChatActivity, "JSON 응답을 구문 분석하는 중 오류가 발생했습니다.", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        } else {
+                            val errorMessage = "API 요청 실패 - 응답 코드: ${response.code}, 메시지: ${response.message}"
+                            Log.e("API Communication", errorMessage)
+                            Toast.makeText(this@ChatActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+
+                    override fun onFailure(call: okhttp3.Call, e: IOException) {
+                        Log.e("API Communication", "API 통신 실패", e)
+                        Toast.makeText(this@ChatActivity, "API 통신 실패", Toast.LENGTH_SHORT).show()
+                    }
+                })
+            } catch (e: Exception) {
+                Log.e("Exception", "예외 발생", e)
+                Toast.makeText(this@ChatActivity, "예외 발생", Toast.LENGTH_SHORT).show()
+            }
         } else {
             Toast.makeText(this, "메시지를 입력해주세요.", Toast.LENGTH_SHORT).show()
         }
     }
 
     private fun receiveMessage(message: String) {
-        val chatItem = ChatItem(message, isSentByMe = false)
-        chatItems.add(chatItem)
-        adapter.notifyItemInserted(chatItems.size - 1)
-        binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
-    }
+        runOnUiThread {
+            val chatItem = ChatItem(message, isSentByMe = false)
+            chatItems.add(chatItem)
+            adapter.notifyItemInserted(chatItems.size - 1)
+            binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
 
+            // 받은 메시지를 messageList에 추가
+            val receivedMessage = Message("bot", message)
+            messageList.add(receivedMessage)
+
+            // messageList 출력
+            Log.d("MessageList", "All Messages:")
+            for (msg in messageList) {
+                Log.d("MessageList", "${msg.sentBy},${msg.message}")
+            }
+        }
+    }
 }
