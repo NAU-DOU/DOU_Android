@@ -11,7 +11,7 @@
         android:background="@drawable/received_message_background"
         android:backgroundTint="@color/white"
         android:layout_marginEnd="80dp"
-        android:padding="10dp">
+        android:padding="13dp">
 
         <TextView
             android:layout_width="wrap_content"
@@ -19,7 +19,7 @@
             android:id="@+id/left_chat_txt"
             android:textColor="@color/black"
             android:fontFamily="@font/pretendardmedium"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:text="Hello World"/>
 
     </LinearLayout>
@@ -29,17 +29,17 @@
         android:layout_height="wrap_content"
         android:id="@+id/right_chat_view"
         android:background="@drawable/sent_message_background"
-        android:backgroundTint="#B3A3F5A6"
+        android:backgroundTint="#A3F5A6"
         android:layout_marginStart="80dp"
         android:layout_alignParentEnd="true"
-        android:padding="10dp">
+        android:padding="13dp">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:id="@+id/right_chat_txt"
             android:textColor="@color/black"
-            android:textSize="20sp"
+            android:textSize="18sp"
             android:fontFamily="@font/pretendardmedium"
             android:text="Hello World"/>
 
