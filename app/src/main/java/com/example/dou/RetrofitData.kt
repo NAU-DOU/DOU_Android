@@ -1,0 +1,153 @@
+package com.example.dou
+
+import com.google.gson.annotations.SerializedName
+
+data class SignupRequest(
+    @SerializedName("userEmail") val userEmail: String,
+    @SerializedName("userNickname") val nickname: String,
+    @SerializedName("password") val password: String,
+)
+
+data class SignupResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: SignupResult,
+)
+
+data class SignupResult(
+    @SerializedName("userId")
+    val userId : Int,
+    @SerializedName("token")
+    val token: String,
+)
+
+data class LoginRequset(
+    @SerializedName("userEmail") val userEmail: String,
+    @SerializedName("password") val password: String,
+)
+
+data class LoginResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: LoginResult,
+)
+
+data class LoginResult(
+    @SerializedName("userId")
+    val userId : Int,
+    @SerializedName("userNickname")
+    val userNickname : String,
+    @SerializedName("token")
+    val token: String,
+)
+
+data class UserResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: UserResult,
+)
+
+data class UserResult(
+    @SerializedName("userId")
+    val userId : Int,
+    @SerializedName("userEmail")
+    val userEmail: String,
+    @SerializedName("userNickname")
+    val userNickname: String,
+    @SerializedName("userStatus")
+    val userStatus : Int,
+)
+
+data class EmotionRequest(
+    @SerializedName("userId")
+    val userId : Int,
+    @SerializedName("sentence")
+    val sentence: String,
+)
+
+data class EmotionResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: EmotionResult,
+)
+
+data class EmotionResult(
+    @SerializedName("sentence")
+    val sentence : String,
+    @SerializedName("sentiment")
+    val sentiment : Int,
+    @SerializedName("classes")
+    val classes: List<Double>,
+)
+
+data class RecordResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: RecordResult,
+)
+
+data class RecordResult(
+    @SerializedName("recordId")
+    val recordId: Int
+)
+
+data class RecordCheckResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: Any // 다양한 유형의 데이터를 포함할 수 있도록 Any 형식으로 정의
+)
+
+data class DateResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("isSuccess")
+    val isSuccess: String,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("result")
+    val result: Any // 다양한 유형의 데이터를 포함할 수 있도록 Any 형식으로 정의
+)
