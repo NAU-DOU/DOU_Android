@@ -52,7 +52,8 @@ class ChatActivity : AppCompatActivity() {
             binding.editTxt.text.clear()
 
             // 보낸 메시지를 messageList에 추가
-            val sentMessage = Message("me", message)
+            // 사용자인경우 '1'으로 설정함
+            val sentMessage = Message("1", message)
             messageList.add(sentMessage)
 
             val apiKey = BuildConfig.API_KEY
@@ -140,7 +141,8 @@ class ChatActivity : AppCompatActivity() {
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
 
             // 받은 메시지를 messageList에 추가
-            val receivedMessage = Message("bot", message)
+            // 컴퓨터인경우 '0'으로 설정함
+            val receivedMessage = Message("0", message)
             messageList.add(receivedMessage)
 
             // messageList 출력

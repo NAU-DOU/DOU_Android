@@ -129,6 +129,7 @@ data class RecordResult(
     val recordId: Int
 )
 
+// 기록 상세 조회
 data class RecordCheckResponse(
     @SerializedName("status")
     val status: Int,
@@ -140,6 +141,12 @@ data class RecordCheckResponse(
     val message: String,
     @SerializedName("result")
     val result: Any // 다양한 유형의 데이터를 포함할 수 있도록 Any 형식으로 정의
+)
+
+// 날짜별 기록 조회
+data class DateRequest(
+    @SerializedName("date")
+    val date: String,
 )
 
 data class DateResponse(

@@ -2,24 +2,35 @@ package com.example.dou
 
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.FragmentCalendarBinding
-import com.example.dou.databinding.FragmentListBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Locale
 
 class CalendarFragment : Fragment() {
     private lateinit var binding: FragmentCalendarBinding
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
 
+    // 대화내용을 출력하기 위한 어댑터 => 채팅할 때 사용한 어댑터와 동일함
+    private lateinit var adapter: ChatAdapter
+    private val chatItems = mutableListOf<ChatItem>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        adapter = ChatAdapter(chatItems)
+        binding.calChatRecycler.layoutManager = LinearLayoutManager(requireContext())
+        binding.calChatRecycler.adapter = adapter
     }
 
     override fun onCreateView(
@@ -46,8 +57,17 @@ class CalendarFragment : Fragment() {
         // RecyclerView에 어댑터 설정
         val calAdapter = CalAdapter(calItems) { position ->
             // 클릭한 아이템의 위치(position)를 받아서 처리합니다.
-            Log.d("CalendarFragment", "Clicked item position: $position")
-            openBottomSheet()
+
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.YEAR, currentYear)
+            calendar.set(Calendar.MONTH, currentMonth)
+            calendar.set(Calendar.DAY_OF_MONTH, position + 1) // position은 0부터 시작하므로 +1 처리합니다.
+
+            val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val formattedDate = dateFormat.format(calendar.time)
+            Log.d("CalendarFragment", "Clicked date: $formattedDate")
+
+            openBottomSheet(formattedDate)
         }
 
         binding.calRecycler.layoutManager = GridLayoutManager(context, 7)
@@ -79,8 +99,40 @@ class CalendarFragment : Fragment() {
             bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
         }
     }
+
     // BottomSheet를 열기 위한 함수
-    private fun openBottomSheet() {
+    private fun openBottomSheet(formattedDate: String) {
+        // userId는 추후에 로그인 한 후에 설정해주면 될 듯
+        val request = DateRequest(formattedDate)
+        val service = RetrofitApi.getRetrofitService
+        val call = service.recordDate(request)
+
+        call.enqueue(object : Callback<DateResponse> {
+            override fun onResponse(call: Call<DateResponse>, response: Response<DateResponse>) {
+                if(response.isSuccessful){
+                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+
+                    // 받은 데이터를 바탕으로 대화 리사이클러뷰 구성하면 될듯!
+                    // 0: 컴퓨터 isSentByMe = false, 1: 사용자 isSentByMe = true
+                    // 0이면 isSentByMe를 false로 설정한 후 item add 해주면 될 듯
+//                    val chatItem = ChatItem(message, isSentByMe = false)
+//                    chatItems.add(chatItem)
+
+                    val dateResponse = response.body()
+                    // 아마 for 문 돌면서 화면에 출력하는 방향으로?
+                }
+                else{
+                    Log.e("날짜별 기록 조회 API", "API 호출 실패: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<DateResponse>, t: Throwable) {
+                Log.e("날짜별 기록 조회 API_에러", "API 호출 실패", t)
+            }
+        })
+
+        // api 요청했을 때 응답으로 돌아오는 값이 없는 경우는 대화가 없다는 의미여서 일단 이런 식으로 구현해두기
+        binding.nonTalkLayout.visibility = View.VISIBLE
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
 }
