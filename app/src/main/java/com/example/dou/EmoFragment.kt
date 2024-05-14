@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.fragment.findNavController
 import com.example.dou.databinding.FragmentEmoBinding
 import com.github.ybq.android.spinkit.style.ThreeBounce
 import com.google.auth.oauth2.GoogleCredentials
@@ -22,6 +21,9 @@ import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.StorageOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class EmoFragment : Fragment() {
 
@@ -145,9 +147,9 @@ class EmoFragment : Fragment() {
             } finally {
                 // 클라이언트 종료
                 speechClient.close()
-                requireActivity().runOnUiThread {
-                    findNavController().navigate(R.id.action_emoFragment2_to_chatActivity)
-                }
+//                requireActivity().runOnUiThread {
+//                    findNavController().navigate(R.id.action_emoFragment2_to_chatActivity)
+//                }
                 Log.d("SpeechClient", "Speech-to-Text 클라이언트 종료")
             }
         }
@@ -183,6 +185,8 @@ class EmoFragment : Fragment() {
                 Log.d("문장 모음", "$sentences")
             }
         }
+
+        anlayzeEmotion(sentences)
     }
 
 
@@ -190,6 +194,39 @@ class EmoFragment : Fragment() {
         requireContext().contentResolver.openInputStream(audioUri)?.use { inputStream ->
             return inputStream.readBytes()
         } ?: throw IllegalStateException("InputStream이 null입니다.")
+    }
+
+    private fun anlayzeEmotion(sentence: String) {
+        val request = EmotionRequest(userId = 123, sentence = sentence)
+        val service = RetrofitApi.getRetrofitService
+        val call = service.emotion(request)
+
+        call.enqueue(object : Callback<EmotionResponse>{
+            override fun onResponse(
+                call: Call<EmotionResponse>,
+                response: Response<EmotionResponse>
+            ) {
+                if(response.isSuccessful){
+                    val emotionResponse = response.body()
+
+                    // emotionResponse를 받고나서 해당 값을 gpt에게 전달하고 해당 내용을 가지고 채팅을 하도록 할 것인지 or
+                    // 채팅 액티비티내에서 api를 요청해서 해당 값을 바탕으로 대화를 시도하는게 나을지 모르겠음.. => 감정 분석하는데 얼마나 걸리려나?
+//                    val bundle = Bundle().apply {
+//                        putParcelable("emotionResponse", emotionResponse)
+//                    }
+//                    requireActivity().runOnUiThread {
+//                        findNavController().navigate(R.id.action_emoFragment2_to_chatActivity)
+//                    }
+                }
+                else{
+                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
+                Log.e("EmotionAnalyzer", "API 호출 실패", t)
+            }
+        })
     }
 
 }

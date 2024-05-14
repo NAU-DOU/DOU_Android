@@ -60,8 +60,8 @@ class ChatActivity : AppCompatActivity() {
             val userMsg = JSONObject()
             try {
                 baseAi.put("role", "user")
+                // 여기서 원하는 형태로 content 넣어 주면 될듯
                 baseAi.put("content", "당신과 나는 오랫동안 알고 지낸 소꿉친구입니다, 반말로 편안하고 친근한 말투로 대답해주세요.")
-
                 userMsg.put("role", "user")
                 userMsg.put("content", message)
 

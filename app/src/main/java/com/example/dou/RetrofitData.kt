@@ -12,7 +12,7 @@ data class SignupResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
@@ -37,7 +37,7 @@ data class LoginResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
@@ -59,7 +59,7 @@ data class UserResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
@@ -90,7 +90,7 @@ data class EmotionResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
@@ -112,7 +112,7 @@ data class RecordResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
@@ -130,7 +130,7 @@ data class RecordCheckResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
@@ -143,7 +143,7 @@ data class DateResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("isSuccess")
-    val isSuccess: String,
+    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
