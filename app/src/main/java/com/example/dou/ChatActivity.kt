@@ -1,6 +1,7 @@
 package com.example.dou
 
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -34,6 +35,8 @@ class ChatActivity : AppCompatActivity() {
         binding.chatRecycler.layoutManager = LinearLayoutManager(this)
         binding.chatRecycler.adapter = adapter
 
+        val emotionResponse = intent.getParcelableExtra<Parcelable>("emotionResponse") as? EmotionResponse
+
         binding.sendBtn.setOnClickListener {
             sendMessage()
         }
@@ -61,7 +64,7 @@ class ChatActivity : AppCompatActivity() {
             try {
                 baseAi.put("role", "user")
                 // 여기서 원하는 형태로 content 넣어 주면 될듯
-                baseAi.put("content", "당신과 나는 오랫동안 알고 지낸 소꿉친구입니다, 반말로 편안하고 친근한 말투로 대답해주세요.")
+                baseAi.put("content", "나는 당신의 감정을 인식하고 긍정적인 감정을 가질 수 있도록 부드럽게 대화하는 친구같은 도우미입니다.")
                 userMsg.put("role", "user")
                 userMsg.put("content", message)
 

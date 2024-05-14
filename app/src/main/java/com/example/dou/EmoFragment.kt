@@ -1,7 +1,9 @@
 package com.example.dou
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcelable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -150,6 +152,7 @@ class EmoFragment : Fragment() {
 //                requireActivity().runOnUiThread {
 //                    findNavController().navigate(R.id.action_emoFragment2_to_chatActivity)
 //                }
+
                 Log.d("SpeechClient", "Speech-to-Text 클라이언트 종료")
             }
         }
@@ -197,11 +200,12 @@ class EmoFragment : Fragment() {
     }
 
     private fun anlayzeEmotion(sentence: String) {
+        // userId는 추후에 로그인 한 후에 설정해주면 될 듯
         val request = EmotionRequest(userId = 123, sentence = sentence)
         val service = RetrofitApi.getRetrofitService
         val call = service.emotion(request)
 
-        call.enqueue(object : Callback<EmotionResponse>{
+        call.enqueue(object : Callback<EmotionResponse> {
             override fun onResponse(
                 call: Call<EmotionResponse>,
                 response: Response<EmotionResponse>
@@ -209,14 +213,10 @@ class EmoFragment : Fragment() {
                 if(response.isSuccessful){
                     val emotionResponse = response.body()
 
-                    // emotionResponse를 받고나서 해당 값을 gpt에게 전달하고 해당 내용을 가지고 채팅을 하도록 할 것인지 or
-                    // 채팅 액티비티내에서 api를 요청해서 해당 값을 바탕으로 대화를 시도하는게 나을지 모르겠음.. => 감정 분석하는데 얼마나 걸리려나?
-//                    val bundle = Bundle().apply {
-//                        putParcelable("emotionResponse", emotionResponse)
-//                    }
-//                    requireActivity().runOnUiThread {
-//                        findNavController().navigate(R.id.action_emoFragment2_to_chatActivity)
-//                    }
+                    val intent = Intent(requireContext(), ChatActivity::class.java).apply {
+                        putExtra("emotionResponse", emotionResponse as Parcelable) // EmotionResponse 객체를 Parcelable로 변환하여 추가
+                    }
+                    requireActivity().startActivity(intent)
                 }
                 else{
                     Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()}")

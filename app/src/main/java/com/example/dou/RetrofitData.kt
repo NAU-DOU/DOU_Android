@@ -89,23 +89,26 @@ data class EmotionRequest(
 data class EmotionResponse(
     @SerializedName("status")
     val status: Int,
-    @SerializedName("isSuccess")
-    val isSuccess: Boolean,
     @SerializedName("code")
     val code: Int,
     @SerializedName("message")
     val message: String,
-    @SerializedName("result")
-    val result: EmotionResult,
+    @SerializedName("data")
+    val data: EmotionData,
+)
+
+data class EmotionData(
+    @SerializedName("data")
+    val emotions: List<EmotionResult>
 )
 
 data class EmotionResult(
-    @SerializedName("sentence")
-    val sentence : String,
-    @SerializedName("sentiment")
-    val sentiment : Int,
     @SerializedName("classes")
     val classes: List<Double>,
+    @SerializedName("sentence")
+    val sentence: String,
+    @SerializedName("sentiment")
+    val sentiment: Int,
 )
 
 data class RecordResponse(
