@@ -121,11 +121,15 @@ class ChatActivity : AppCompatActivity() {
 
                     override fun onFailure(call: okhttp3.Call, e: IOException) {
                         Log.e("API Communication", "API 통신 실패", e)
-                        Toast.makeText(this@ChatActivity, "API 통신 실패", Toast.LENGTH_SHORT).show()
+                        runOnUiThread {
+                            Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
+                        }
+                        //Toast.makeText(this@ChatActivity, "API 통신 실패", Toast.LENGTH_SHORT).show()
                     }
                 })
             } catch (e: Exception) {
                 Log.e("Exception", "예외 발생", e)
+
                 Toast.makeText(this@ChatActivity, "예외 발생", Toast.LENGTH_SHORT).show()
             }
         } else {
