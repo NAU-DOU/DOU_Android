@@ -51,8 +51,6 @@ class ChatActivity : AppCompatActivity() {
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
             binding.editTxt.text.clear()
 
-            // 보낸 메시지를 messageList에 추가
-            // 사용자인경우 '1'으로 설정함
             val sentMessage = Message("1", message)
             messageList.add(sentMessage)
 
@@ -64,7 +62,6 @@ class ChatActivity : AppCompatActivity() {
             val userMsg = JSONObject()
             try {
                 baseAi.put("role", "user")
-                // 여기서 원하는 형태로 content 넣어 주면 될듯
                 baseAi.put("content", "나는 당신의 감정을 인식하고 긍정적인 감정을 가질 수 있도록 부드럽게 대화하는 친구같은 도우미입니다.")
                 userMsg.put("role", "user")
                 userMsg.put("content", message)
@@ -103,6 +100,7 @@ class ChatActivity : AppCompatActivity() {
                                     if (jsonArray.length() > 0) {
                                         val content = jsonArray.getJSONObject(0).getJSONObject("message").getString("content")
                                         receiveMessage(content)
+                                        sendMessageListToServer()  // 서버로 메시지 목록을 전송
                                     } else {
                                         Log.e("API Communication", "No choices found in response.")
                                         Toast.makeText(this@ChatActivity, "응답에서 선택지를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -124,7 +122,6 @@ class ChatActivity : AppCompatActivity() {
                         runOnUiThread {
                             Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
                         }
-                        //Toast.makeText(this@ChatActivity, "API 통신 실패", Toast.LENGTH_SHORT).show()
                     }
                 })
             } catch (e: Exception) {
@@ -137,6 +134,47 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    private fun sendMessageListToServer() {
+        val jsonArray = JSONArray()
+        for (msg in messageList) {
+            val jsonObject = JSONObject()
+            try {
+                jsonObject.put("sentBy", msg.sentBy)
+                jsonObject.put("message", msg.message)
+            } catch (e: JSONException) {
+                e.printStackTrace()
+            }
+            jsonArray.put(jsonObject)
+        }
+
+        val jsonString = jsonArray.toString()
+        Log.d("SendMessageList", "JSON String: $jsonString")
+
+        // 아래 코드는 JSON을 서버로 보내는 부분으로, 현재는 로그를 찍기 때문에 주석 처리합니다.
+        /*
+        val body = RequestBody.create(JSON, jsonString)
+        val request = Request.Builder()
+            .url("YOUR_SERVER_URL_HERE")  // 여기에 서버 URL을 넣으세요
+            .post(body)
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                if (response.isSuccessful) {
+                    Log.d("SendMessageList", "Message list sent successfully.")
+                } else {
+                    val errorMessage = "Failed to send message list - Response code: ${response.code}, Message: ${response.message}"
+                    Log.e("SendMessageList", errorMessage)
+                }
+            }
+
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                Log.e("SendMessageList", "Failed to send message list", e)
+            }
+        })
+        */
+    }
+
     private fun receiveMessage(message: String) {
         runOnUiThread {
             val chatItem = ChatItem(message, isSentByMe = false)
@@ -144,12 +182,9 @@ class ChatActivity : AppCompatActivity() {
             adapter.notifyItemInserted(chatItems.size - 1)
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
 
-            // 받은 메시지를 messageList에 추가
-            // 컴퓨터인경우 '0'으로 설정함
             val receivedMessage = Message("0", message)
             messageList.add(receivedMessage)
 
-            // messageList 출력
             Log.d("MessageList", "All Messages:")
             for (msg in messageList) {
                 Log.d("MessageList", "${msg.sentBy},${msg.message}")

@@ -33,5 +33,4 @@ class ListAdapter (private val listItems: ArrayList<ListItem>) :
             listTxt.text = item.listTxt
         }
     }
-
 }
