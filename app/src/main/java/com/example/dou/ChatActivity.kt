@@ -134,6 +134,7 @@ class ChatActivity : AppCompatActivity() {
         }
     }
 
+    // API 연결을 통해서 통 메시지 전달하는 경우 어떻게 전달하는 지 확인하기 위한 코드 작성 완료
     private fun sendMessageListToServer() {
         val jsonArray = JSONArray()
         for (msg in messageList) {
@@ -149,6 +150,8 @@ class ChatActivity : AppCompatActivity() {
 
         val jsonString = jsonArray.toString()
         Log.d("SendMessageList", "JSON String: $jsonString")
+
+
 
         // 아래 코드는 JSON을 서버로 보내는 부분으로, 현재는 로그를 찍기 때문에 주석 처리합니다.
         /*
