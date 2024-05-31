@@ -3,7 +3,6 @@ package com.example.dou
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.os.Parcelable
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
@@ -21,6 +20,7 @@ import com.google.cloud.speech.v1.SpeechClient
 import com.google.cloud.speech.v1.SpeechSettings
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.StorageOptions
+import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Call
@@ -189,7 +189,7 @@ class EmoFragment : Fragment() {
             }
         }
 
-        anlayzeEmotion(sentences)
+        analyzeEmotion(sentences)
     }
 
 
@@ -199,9 +199,9 @@ class EmoFragment : Fragment() {
         } ?: throw IllegalStateException("InputStream이 null입니다.")
     }
 
-    private fun anlayzeEmotion(sentence: String) {
-        // userId는 추후에 로그인 한 후에 설정해주면 될 듯
+    private fun analyzeEmotion(sentence: String) {
         val request = EmotionRequest(userId = 0, sentence = sentence)
+        Log.d("EmotionRequest", "Request: $request")
         val service = RetrofitApi.getRetrofitService
         val call = service.emotion(request)
 
@@ -210,17 +210,23 @@ class EmoFragment : Fragment() {
                 call: Call<EmotionResponse>,
                 response: Response<EmotionResponse>
             ) {
-                if(response.isSuccessful){
+                if (response.isSuccessful) {
                     val emotionResponse = response.body()
+                    if (emotionResponse != null) {
+                        // Gson을 사용하여 EmotionResponse 객체를 JSON 문자열로 변환
+                        val gson = Gson()
+                        val emotionResponseJson = gson.toJson(emotionResponse)
+                        Log.d("emotionResponseJson", "$emotionResponseJson")
 
-                    val intent = Intent(requireContext(), ChatActivity::class.java).apply {
-                        putExtra("emotionResponse", emotionResponse as Parcelable) // EmotionResponse 객체를 Parcelable로 변환하여 추가
-                        response
+                        // Intent로 JSON 문자열 전달
+                        val intent = Intent(requireContext(), ChatActivity::class.java).apply {
+                            putExtra("emotionResponseJson", emotionResponseJson)
+
+                        }
+                        requireActivity().startActivity(intent)
                     }
-                    requireActivity().startActivity(intent)
-                }
-                else{
-                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()}")
+                } else {
+                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
                 }
             }
 

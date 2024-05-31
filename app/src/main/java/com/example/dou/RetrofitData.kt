@@ -82,7 +82,7 @@ data class UserResult(
 data class EmotionRequest(
     @SerializedName("userId")
     val userId : Int,
-    @SerializedName("sentence")
+    @SerializedName("sentense")
     val sentence: String,
 )
 
