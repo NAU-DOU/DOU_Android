@@ -99,7 +99,7 @@ data class EmotionResponse(
 
 data class EmotionData(
     @SerializedName("data")
-    val emotions: List<EmotionResult>
+    val data: List<EmotionResult>
 )
 
 data class EmotionResult(

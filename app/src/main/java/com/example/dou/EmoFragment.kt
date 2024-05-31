@@ -201,7 +201,7 @@ class EmoFragment : Fragment() {
 
     private fun anlayzeEmotion(sentence: String) {
         // userId는 추후에 로그인 한 후에 설정해주면 될 듯
-        val request = EmotionRequest(userId = 123, sentence = sentence)
+        val request = EmotionRequest(userId = 0, sentence = sentence)
         val service = RetrofitApi.getRetrofitService
         val call = service.emotion(request)
 
@@ -215,6 +215,7 @@ class EmoFragment : Fragment() {
 
                     val intent = Intent(requireContext(), ChatActivity::class.java).apply {
                         putExtra("emotionResponse", emotionResponse as Parcelable) // EmotionResponse 객체를 Parcelable로 변환하여 추가
+                        response
                     }
                     requireActivity().startActivity(intent)
                 }
