@@ -1,7 +1,6 @@
 package com.example.dou
 
 import android.os.Bundle
-import android.os.Parcelable
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -15,6 +14,9 @@ import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.io.IOException
 
 class ChatActivity : AppCompatActivity() {
@@ -35,7 +37,19 @@ class ChatActivity : AppCompatActivity() {
         binding.chatRecycler.layoutManager = LinearLayoutManager(this)
         binding.chatRecycler.adapter = adapter
 
-        val emotionResponse = intent.getParcelableExtra<Parcelable>("emotionResponse") as? EmotionResponse
+        // Intent에서 sentences 값을 가져옵니다.
+        val sentences = intent.getStringExtra("sentences")
+        Log.d("ChatActivity", "Received sentences: $sentences")
+
+        // Null 체크 후 analyzeEmotion 함수 호출
+        if (sentences != null) {
+            analyzeEmotion(sentences)
+        } else {
+            Log.d("ChatActivity", "Sentences is null")
+        }
+
+//        val emotionResponse = intent.getParcelableExtra<Parcelable>("emotionResponse") as? EmotionResponse
+//        Log.d("emontionResponse", "$emotionResponse")
 
         binding.sendBtn.setOnClickListener {
             sendMessage()
@@ -193,5 +207,46 @@ class ChatActivity : AppCompatActivity() {
                 Log.d("MessageList", "${msg.sentBy},${msg.message}")
             }
         }
+    }
+
+    private fun analyzeEmotion(sentence: String) {
+        val request = EmotionRequest(userId = 0, sentence = sentence)
+        Log.d("EmotionRequest", "Request: $request")
+        val service = RetrofitApi.getRetrofitService
+        val call = service.emotion(request)
+
+        call.enqueue(object : Callback<EmotionResponse> {
+            override fun onResponse(
+                call: Call<EmotionResponse>,
+                response: Response<EmotionResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val emotionResponse = response.body()
+                    if (emotionResponse != null) {
+                        val emoSentences = mutableListOf<String>()
+                        val sentiments = mutableListOf<Int>()
+                        val dataList = emotionResponse.data.data
+                        Log.d("DataList", "$dataList")
+                        dataList.forEach { data ->
+                            if (data.sentence.isNotEmpty()) {
+                                emoSentences.add(data.sentence)
+                                sentiments.add(data.sentiment)
+                            }
+                        }
+
+                        // 각 문장과 감정을 로그에 출력
+                        for (i in emoSentences.indices) {
+                            Log.d("EmotionResponse", "Sentence: ${emoSentences[i]}, Sentiment: ${sentiments[i]}")
+                        }
+                    }
+                } else {
+                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
+                Log.e("EmotionAnalyzer", "API 호출 실패", t)
+            }
+        })
     }
 }

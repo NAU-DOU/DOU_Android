@@ -20,7 +20,6 @@ import com.google.cloud.speech.v1.SpeechClient
 import com.google.cloud.speech.v1.SpeechSettings
 import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.StorageOptions
-import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import retrofit2.Call
@@ -170,6 +169,7 @@ class EmoFragment : Fragment() {
 
         // 문장들을 저장할 변수 생성
         var sentences = ""
+        var originalSentences = ""
 
         // 결과가 있을 경우 각 결과를 처리합니다.
         for (result in resultsList) {
@@ -179,8 +179,11 @@ class EmoFragment : Fragment() {
                 // 텍스트 추출
                 val transcript = alternative.transcript
 
+                // 원본 텍스트를 originalSentences에 추가합니다.
+                originalSentences += transcript
+
                 // 각 문장 끝에 \n을 붙여서 sentences 변수에 추가합니다.
-                val formattedTranscript = transcript.replace(".", ".\\n")
+                val formattedTranscript = transcript.replace(".", ".\n")
                 sentences += formattedTranscript
 
                 // UI에 텍스트 표시 또는 다른 처리 수행
@@ -189,7 +192,19 @@ class EmoFragment : Fragment() {
             }
         }
 
-        analyzeEmotion(sentences)
+        // gpt STT된 내용 전체 요약
+        summaryEmotion(originalSentences) // 원본 텍스트를 전달
+        Log.d("originalSentences", "$originalSentences")
+
+        val intent = Intent(requireContext(), ChatActivity::class.java).apply {
+            putExtra("sentences", sentences)
+        }
+        requireActivity().startActivity(intent)
+
+
+        // 감정 분석 요약
+        //analyzeEmotion(sentences)
+
     }
 
 
@@ -199,39 +214,74 @@ class EmoFragment : Fragment() {
         } ?: throw IllegalStateException("InputStream이 null입니다.")
     }
 
-    private fun analyzeEmotion(sentence: String) {
-        val request = EmotionRequest(userId = 0, sentence = sentence)
-        Log.d("EmotionRequest", "Request: $request")
-        val service = RetrofitApi.getRetrofitService
-        val call = service.emotion(request)
+//    private fun analyzeEmotion(sentence: String) {
+//        val request = EmotionRequest(userId = 0, sentence = sentence)
+//        Log.d("EmotionRequest", "Request: $request")
+//        val service = RetrofitApi.getRetrofitService
+//        val call = service.emotion(request)
+//
+//        call.enqueue(object : Callback<EmotionResponse> {
+//            override fun onResponse(
+//                call: Call<EmotionResponse>,
+//                response: Response<EmotionResponse>
+//            ) {
+//                if (response.isSuccessful) {
+//                    val emotionResponse = response.body()
+//                    if (emotionResponse != null) {
+//
+//                        val response = emotionResponse.data
+//                        Log.d("감정 분석 응답", "$response")
+//                        // Gson을 사용하여 EmotionResponse 객체를 JSON 문자열로 변환
+//                        val gson = Gson()
+//                        val emotionResponseJson = gson.toJson(emotionResponse)
+//                        Log.d("emotionResponseJson", "$emotionResponseJson")
+//
+//                        // Intent로 JSON 문자열 전달
+//                        val intent = Intent(requireContext(), ChatActivity::class.java).apply {
+//                            putExtra("emotionResponseJson", emotionResponseJson)
+//
+//                        }
+//                        requireActivity().startActivity(intent)
+//                    }
+//                } else {
+//                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
+//                Log.e("EmotionAnalyzer", "API 호출 실패", t)
+//            }
+//        })
+//    }
 
-        call.enqueue(object : Callback<EmotionResponse> {
+    private fun summaryEmotion(context: String) {
+        val request = SummaryRequest(userId = 0, context = context)
+        Log.d("SummaryRequest", "Request: $request")
+        val service = RetrofitApi.getRetrofitService
+        val call = service.summary(request)
+
+        call.enqueue(object : Callback<SummaryResponse> {
             override fun onResponse(
-                call: Call<EmotionResponse>,
-                response: Response<EmotionResponse>
+                call: Call<SummaryResponse>,
+                response: Response<SummaryResponse>
             ) {
                 if (response.isSuccessful) {
-                    val emotionResponse = response.body()
-                    if (emotionResponse != null) {
-                        // Gson을 사용하여 EmotionResponse 객체를 JSON 문자열로 변환
-                        val gson = Gson()
-                        val emotionResponseJson = gson.toJson(emotionResponse)
-                        Log.d("emotionResponseJson", "$emotionResponseJson")
+                    val summaryResponse = response.body()
+                    if (summaryResponse != null) {
 
-                        // Intent로 JSON 문자열 전달
-                        val intent = Intent(requireContext(), ChatActivity::class.java).apply {
-                            putExtra("emotionResponseJson", emotionResponseJson)
-
-                        }
-                        requireActivity().startActivity(intent)
+                        val response = summaryResponse.data
+//                        Log.d("감정 분석 응답1", "$response")
+//                        Log.d("감정 분석 응답2", "${response.response}")
+                        Log.d("SummaryResponse", "Summary: ${summaryResponse.data.response}")
+                        //Log.d("감정 분석 응답", "${response.summary}")
                     }
                 } else {
-                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    Log.e("SummaryAPI", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
                 }
             }
 
-            override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
-                Log.e("EmotionAnalyzer", "API 호출 실패", t)
+            override fun onFailure(call: Call<SummaryResponse>, t: Throwable) {
+                Log.e("SummaryAPI", "API 호출 실패", t)
             }
         })
     }

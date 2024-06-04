@@ -161,3 +161,29 @@ data class DateResponse(
     @SerializedName("result")
     val result: Any // 다양한 유형의 데이터를 포함할 수 있도록 Any 형식으로 정의
 )
+
+// Gpt 이용 내용 요약
+data class SummaryRequest(
+    @SerializedName("userId")
+    val userId : Int,
+    @SerializedName("context")
+    val context: String,
+)
+
+data class SummaryResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: Int,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: SummaryData,
+)
+
+data class SummaryData(
+    @SerializedName("response")
+    val response: String
+)
+
+

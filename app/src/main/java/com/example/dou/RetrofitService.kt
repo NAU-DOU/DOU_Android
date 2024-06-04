@@ -36,4 +36,9 @@ interface RetrofitService {
     // 날짜별 기록 조회
     @GET("record/date")
     fun recordDate(@Query("date") date: DateRequest): Call<DateResponse>
+
+    // GPT 이용 Summary
+    @POST("/gpt/summary")
+    fun summary(@Body request: SummaryRequest): Call<SummaryResponse>
+
 }
