@@ -41,4 +41,7 @@ interface RetrofitService {
     @POST("/gpt/summary")
     fun summary(@Body request: SummaryRequest): Call<SummaryResponse>
 
+    @POST("/gpt")
+    fun getGPTResponse(@Body request: GPTRequest): Call<GPTResponse>
+
 }

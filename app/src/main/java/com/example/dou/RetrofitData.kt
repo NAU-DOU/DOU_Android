@@ -186,4 +186,25 @@ data class SummaryData(
     val response: String
 )
 
+// GPT와의 대화
+data class GPTRequest(
+    val userId: Int,
+    val context: String,
+    val reqType: String,
+    val reqSent: String
+)
+
+data class GPTResponse(
+    val status: Int,
+    val code: String,
+    val message: String,
+    val data: GPTData
+)
+
+data class GPTData(
+    val response: String
+)
+
+
+
 
