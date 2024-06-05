@@ -92,7 +92,7 @@ dependencies {
     // 로딩 화면 구현중
     implementation 'com.github.ybq:Android-SpinKit:1.4.0'
 
-    implementation 'com.github.shin285:KOMORAN:3.3.9'
+    //implementation 'com.github.shin285:KOMORAN:3.3.9'
 
     // GPT API 사용
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'

@@ -22,9 +22,6 @@ import com.google.cloud.storage.BlobInfo
 import com.google.cloud.storage.StorageOptions
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class EmoFragment : Fragment() {
 
@@ -193,11 +190,12 @@ class EmoFragment : Fragment() {
         }
 
         // gpt STT된 내용 전체 요약
-        summaryEmotion(originalSentences) // 원본 텍스트를 전달
-        Log.d("originalSentences", "$originalSentences")
+        //summaryEmotion(originalSentences) // 원본 텍스트를 전달
+        //Log.d("originalSentences", "$originalSentences")
 
         val intent = Intent(requireContext(), ChatActivity::class.java).apply {
             putExtra("sentences", sentences)
+            putExtra("originalSentences", originalSentences)
         }
         requireActivity().startActivity(intent)
 
@@ -254,36 +252,36 @@ class EmoFragment : Fragment() {
 //        })
 //    }
 
-    private fun summaryEmotion(context: String) {
-        val request = SummaryRequest(userId = 0, context = context)
-        Log.d("SummaryRequest", "Request: $request")
-        val service = RetrofitApi.getRetrofitService
-        val call = service.summary(request)
-
-        call.enqueue(object : Callback<SummaryResponse> {
-            override fun onResponse(
-                call: Call<SummaryResponse>,
-                response: Response<SummaryResponse>
-            ) {
-                if (response.isSuccessful) {
-                    val summaryResponse = response.body()
-                    if (summaryResponse != null) {
-
-                        val response = summaryResponse.data
-//                        Log.d("감정 분석 응답1", "$response")
-//                        Log.d("감정 분석 응답2", "${response.response}")
-                        Log.d("SummaryResponse", "Summary: ${summaryResponse.data.response}")
-                        //Log.d("감정 분석 응답", "${response.summary}")
-                    }
-                } else {
-                    Log.e("SummaryAPI", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
-                }
-            }
-
-            override fun onFailure(call: Call<SummaryResponse>, t: Throwable) {
-                Log.e("SummaryAPI", "API 호출 실패", t)
-            }
-        })
-    }
+//    private fun summaryEmotion(context: String) {
+//        val request = SummaryRequest(userId = 0, context = context)
+//        Log.d("SummaryRequest", "Request: $request")
+//        val service = RetrofitApi.getRetrofitService
+//        val call = service.summary(request)
+//
+//        call.enqueue(object : Callback<SummaryResponse> {
+//            override fun onResponse(
+//                call: Call<SummaryResponse>,
+//                response: Response<SummaryResponse>
+//            ) {
+//                if (response.isSuccessful) {
+//                    val summaryResponse = response.body()
+//                    if (summaryResponse != null) {
+//
+//                        val response = summaryResponse.data
+//                        Log.d("SummaryResponse", "Summary: ${response.response}")
+//
+//
+//
+//                    }
+//                } else {
+//                    Log.e("SummaryAPI", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<SummaryResponse>, t: Throwable) {
+//                Log.e("SummaryAPI", "API 호출 실패", t)
+//            }
+//        })
+//    }
 
 }
