@@ -26,9 +26,7 @@
         android:id="@+id/chatListRecycler"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-
         android:orientation="horizontal"
-
         android:scrollbars="horizontal"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -39,45 +37,63 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:background="#262A34"
-        android:paddingLeft="30dp"
-        android:paddingRight="30dp"
         app:layout_constraintBottom_toTopOf="@id/bottom_layout"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/chatListRecycler">
 
-        <TextView
-            android:id="@+id/tv_sentence"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:background="@drawable/button_custom"
-            android:fontFamily="@font/pretendardmedium"
-            android:padding="15dp"
-            android:text="일단, 나는 오늘 살면서 처음으로 친구들이랑\n야구장에 다녀왔어. 잠실 종합경기장에서 했던 경기였는데,\n첫 야구장이라 그런지 엄청 긴장되더라고,"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="15sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/chatRecycler"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_marginTop="30dp"
-            android:layout_weight="1"
-            android:nestedScrollingEnabled="false"
-            android:overScrollMode="never"
-            android:paddingTop="8dp"
-            android:scrollbars="vertical"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_sentence" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <TextView
+        android:id="@+id/tv_sentence"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/button_custom"
+        android:fontFamily="@font/pretendardmedium"
+        android:padding="15dp"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:text="일단, 나는 오늘 살면서 처음으로 친구들이랑\n야구장에 다녀왔어. 잠실 종합경기장에서 했던 경기였는데,\n첫 야구장이라 그런지 엄청 긴장되더라고,"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="15sp"
+        app:layout_constraintTop_toTopOf="@id/layout_sentence"
+        app:layout_constraintStart_toStartOf="@id/layout_sentence"
+        app:layout_constraintEnd_toEndOf="@id/layout_sentence"/>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:layout_marginBottom="5dp"
+        app:layout_constraintStart_toStartOf="@id/layout_sentence"
+        app:layout_constraintEnd_toEndOf="@id/layout_sentence"
+        app:layout_constraintBottom_toTopOf="@id/btn_end"
+        android:id="@+id/chatRecycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="30dp"
+        android:layout_weight="1"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        android:paddingTop="8dp"
+        app:layout_constraintTop_toBottomOf="@id/tv_sentence" />
+
+
+    <Button
+        android:id="@+id/btn_end"
+        android:background="@drawable/button_custom"
+        app:backgroundTint="#661FFF1B"
+        android:fontFamily="@font/pretendardmedium"
+        app:layout_constraintStart_toStartOf="@id/bottom_layout"
+        app:layout_constraintEnd_toEndOf="@id/bottom_layout"
+        app:layout_constraintBottom_toTopOf="@id/bottom_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="도우와의 대화를 마무리하고 나가기"/>
+
 
     <RelativeLayout
         android:id="@+id/bottom_layout"

@@ -202,7 +202,8 @@ data class GPTResponse(
 )
 
 data class GPTData(
-    val response: String
+    val response: String,
+    val positive: List<String>
 )
 
 

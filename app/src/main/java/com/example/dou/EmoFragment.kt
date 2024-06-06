@@ -193,7 +193,7 @@ class EmoFragment : Fragment() {
         //summaryEmotion(originalSentences) // 원본 텍스트를 전달
         //Log.d("originalSentences", "$originalSentences")
 
-        val intent = Intent(requireContext(), ChatActivity::class.java).apply {
+        val intent = Intent(requireContext(), SentenceActivity::class.java).apply {
             putExtra("sentences", sentences)
             putExtra("originalSentences", originalSentences)
         }

@@ -1,11 +1,14 @@
 package com.example.dou
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivitySentenceBinding
+import com.google.android.material.snackbar.Snackbar
 import model.Message
 import retrofit2.Call
 import retrofit2.Callback
@@ -21,6 +24,9 @@ class SentenceActivity : AppCompatActivity() {
     private val messageList = ArrayList<Message>()
 
     private val emotionDataList = mutableListOf<EmotionResult>()
+    private val conversationHistoryMap = mutableMapOf<Int, Pair<Boolean, MutableList<ChatItem>>>()
+    private var selectedConversation: Int = 0
+    private var waitingForPositiveResponse: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,42 +34,35 @@ class SentenceActivity : AppCompatActivity() {
         binding = ActivitySentenceBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //adapter = SentenceAdapter(sentenceItems)
+        // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // 뒤로가기 버튼을 누를 때 Snackbar 메시지 표시
+                val snackbar = Snackbar.make(binding.root, "뒤로가기를 할 수 없어\n도우와의 대화를 종료하고 싶으면 '도우와의 대화를 마무리하고 나가기' 버튼을 눌러줘", Snackbar.LENGTH_INDEFINITE)
+                snackbar.setAction("확인") {
+                    snackbar.dismiss()
+                }
+                snackbar.show()
+            }
+        })
+
         adapter = SentenceAdapter(sentenceItems) { position ->
             onSentenceItemClick(position)
         }
-        binding.chatListRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.chatListRecycler.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.chatListRecycler.adapter = adapter
-
-        sentenceItems.apply {
-            add(SentenceItem("대화1", true))
-            add(SentenceItem("대화2"))
-            add(SentenceItem("대화3"))
-            add(SentenceItem("대화4"))
-            add(SentenceItem("대화5"))
-            add(SentenceItem("대화6"))
-            add(SentenceItem("대화7"))
-            add(SentenceItem("대화8"))
-            add(SentenceItem("대화9"))
-        }
 
         chatadapter = ChatAdapter(chatItems)
         binding.chatRecycler.layoutManager = LinearLayoutManager(this)
-        binding.chatRecycler.adapter = adapter
+        binding.chatRecycler.adapter = chatadapter
 
-        // Intent에서 sentences 값을 가져옵니다.
         val sentences = intent.getStringExtra("sentences")
         val originalSentences = intent.getStringExtra("originalSentences")
         Log.d("ChatActivity", "Received sentences: $sentences")
 
-        // Null 체크 후 analyzeEmotion 함수 호출
         if (sentences != null && originalSentences != null) {
-            // gpt로부터 받은 내용을 가지고 요약한걸 제일 먼저 화면에 보여주기
-            // summaryEmotion(originalSentences)
-
-            // 그리고 다음으로는 감정 인식을 통해서 제일 먼저 받은 내용을 사용자에게 보내기
             analyzeEmotion(sentences)
-
         } else {
             Log.d("ChatActivity", "Sentences is null")
         }
@@ -71,86 +70,59 @@ class SentenceActivity : AppCompatActivity() {
         binding.sendBtn.setOnClickListener {
             sendMessage()
         }
+
+        binding.btnEnd.setOnClickListener {
+            val intent = Intent(this, HomeFragment::class.java)
+            startActivity(intent)
+
+            // Toast 메시지 표시
+            Toast.makeText(this, "너랑 대화해서 좋았어! 다음에 또 얘기하자!", Toast.LENGTH_LONG).show()
+
+            // 현재 Activity 종료
+            finish()
+        }
     }
 
     private fun onSentenceItemClick(position: Int) {
-        // 모든 아이템의 선택 상태를 해제하고 클릭된 아이템만 선택 상태로 설정
+        // 현재 대화 내용을 저장
+        conversationHistoryMap[selectedConversation] = Pair(
+            conversationHistoryMap[selectedConversation]?.first ?: false,
+            chatItems.toMutableList()
+        )
+
+        // 화면 초기화
+        chatItems.clear()
+        chatadapter.notifyDataSetChanged()
+
+        // 선택된 대화 항목의 내용을 불러오기
+        conversationHistoryMap[position]?.second?.let { savedChatItems ->
+            chatItems.addAll(savedChatItems)
+        }
+
+        // 새로운 대화 시작 시, 선택된 대화 항목의 내용을 바인딩
         sentenceItems.forEachIndexed { index, item ->
             item.isSelected = index == position
         }
         adapter.notifyDataSetChanged()
 
-        // 여기서 클릭된 대화 아이템에 맞는 메시지 데이터를 로드하여 chatItems를 업데이트하는 코드를 추가하세요.
-    }
-
-//    private fun summaryEmotion(context: String) {
-//        val request = SummaryRequest(userId = 0, context = context)
-//        Log.d("SummaryRequest", "Request: $request")
-//        val service = RetrofitApi.getRetrofitService
-//        val call = service.summary(request)
-//
-//        call.enqueue(object : Callback<SummaryResponse> {
-//            override fun onResponse(
-//                call: Call<SummaryResponse>,
-//                response: Response<SummaryResponse>
-//            ) {
-//                if (response.isSuccessful) {
-//                    val summaryResponse = response.body()
-//                    if (summaryResponse != null) {
-//
-//                        val response = summaryResponse.data
-//                        Log.d("SummaryResponse", "Summary: ${response.response}")
-//
-//                        receiveMessage("\'${response.response}\'" + "라는 대화를 했네")
-//                    }
-//                } else {
-//                    Log.e("SummaryAPI", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<SummaryResponse>, t: Throwable) {
-//                Log.e("SummaryAPI", "API 호출 실패", t)
-//            }
-//        })
-//    }
-
-    private fun sendMessage() {
-        val message = binding.editTxt.text.toString().trim()
-        if (message.isNotEmpty()) {
-
-            val chatItem = ChatItem(message, isSentByMe = true)
-            chatItems.add(chatItem)
-            adapter.notifyItemInserted(chatItems.size - 1)
-            binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
-            binding.editTxt.text.clear()
-
-            handleUserInput(message)
-        } else {
-            Toast.makeText(this, "메시지를 입력해주세요.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun handleUserInput(userInput: String) {
-        addToConversationHistory("User: $userInput")
-        sendGPTRequest(userInput)
-    }
-
-    private fun receiveMessage(message: String) {
-        runOnUiThread {
-            val chatItem = ChatItem(message, isSentByMe = false)
-            chatItems.add(chatItem)
-            adapter.notifyItemInserted(chatItems.size - 1)
-            binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
-
-            addToConversationHistory("GPT: $message")
-
-            val receivedMessage = Message("0", message)
-            messageList.add(receivedMessage)
-
-            Log.d("MessageList", "All Messages:")
-            for (msg in messageList) {
-                Log.d("MessageList", "${msg.sentBy}, ${msg.message}")
+        if (position < emotionDataList.size) {
+            binding.tvSentence.text = emotionDataList[position].sentence
+            if (conversationHistoryMap[position]?.first == false) {
+                sendFirstSentenceToGPT(emotionDataList[position]) // 클릭된 항목에 해당하는 문장을 사용하여 GPT 호출
+                conversationHistoryMap[position] =
+                    Pair(true, chatItems.toMutableList()) // 플래그를 true로 설정
             }
+        }
+
+        // 선택된 대화 항목을 업데이트
+        selectedConversation = position
+
+        // 대화 내용을 업데이트
+        chatadapter.notifyDataSetChanged()
+
+        // 유효한 위치로만 스크롤하도록 수정
+        if (chatItems.size > 0) {
+            binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
         }
     }
 
@@ -168,29 +140,45 @@ class SentenceActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     val emotionResponse = response.body()
                     if (emotionResponse != null) {
-                        emotionDataList.clear() // 기존 데이터를 지우고
-                        emotionDataList.addAll(emotionResponse.data.data) // 새로운 데이터를 저장
-                        val emoSentences = mutableListOf<String>()
-                        val sentiments = mutableListOf<Int>()
+                        emotionDataList.clear()
                         val dataList = emotionResponse.data.data
+
+                        // 마지막 문장을 제외하고 emotionDataList에 추가
+                        if (dataList.isNotEmpty() && dataList.last().sentence.isEmpty()) {
+                            emotionDataList.addAll(dataList.dropLast(1))
+                        } else {
+                            emotionDataList.addAll(dataList)
+                        }
+
+                        sentenceItems.clear()
+                        for (i in emotionDataList.indices) {
+                            sentenceItems.add(SentenceItem("대화 ${i + 1}", isSelected = i == 0))
+                        }
+                        adapter.notifyDataSetChanged()
+
                         Log.d("DataList", "$dataList")
                         dataList.forEach { data ->
                             if (data.sentence.isNotEmpty()) {
-                                emoSentences.add(data.sentence)
-                                sentiments.add(data.sentiment)
+                                Log.d(
+                                    "EmotionResponse",
+                                    "Sentence: ${data.sentence}, Sentiment: ${data.sentiment}"
+                                )
                             }
                         }
 
-                        // 각 문장과 감정을 로그에 출력
-                        for (i in emoSentences.indices) {
-                            Log.d("EmotionResponse", "Sentence: ${emoSentences[i]}, Sentiment: ${sentiments[i]}")
-                        }
-                        if (dataList.isNotEmpty()) {
-                            sendFirstSentenceToGPT(dataList[0])
+                        if (emotionDataList.isNotEmpty()) {
+                            // 첫 번째 대화를 항상 선택된 상태로 설정
+                            binding.tvSentence.text = emotionDataList[0].sentence
+                            sendFirstSentenceToGPT(emotionDataList[0])
+                            conversationHistoryMap[0] =
+                                Pair(true, mutableListOf()) // 첫 번째 대화에 대해 호출된 상태로 설정
                         }
                     }
                 } else {
-                    Log.e("EmotionAnalyzer", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    Log.e(
+                        "EmotionAnalyzer",
+                        "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}"
+                    )
                 }
             }
 
@@ -198,6 +186,97 @@ class SentenceActivity : AppCompatActivity() {
                 Log.e("EmotionAnalyzer", "API 호출 실패", t)
             }
         })
+    }
+
+    private fun sendMessage() {
+        val message = binding.editTxt.text.toString().trim()
+        if (message.isNotEmpty()) {
+            val chatItem = ChatItem(message, isSentByMe = true)
+            chatItems.add(chatItem)
+            chatadapter.notifyItemInserted(chatItems.size - 1)
+            binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
+            binding.editTxt.text.clear()
+            handleUserInput(message)
+        } else {
+            Toast.makeText(this, "메시지를 입력해주세요.", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun handleUserInput(userInput: String) {
+        addToConversationHistory("User: $userInput")
+
+        if (waitingForPositiveResponse) {
+            sendGPTRequest(userInput, "TRANSFORM_CONFIRM", "분노")
+            receiveMessage("좋아! 그러면 \'${userInput}\' 이 문장으로 바꾸도록 할게!\n우리 긍정적인 생각 더 많이 하자!")
+            waitingForPositiveResponse = false
+        } else {
+            sendGPTRequest(userInput, determineReqType(1), determineReqSent(1))
+        }
+    }
+
+    private fun sendGPTRequest(userInput: String, reqType: String, reqSent: String) {
+        val request = GPTRequest(
+            userId = 0,
+            context = userInput,
+            reqType = reqType,
+            reqSent = reqSent
+        )
+
+        val service = RetrofitApi.getRetrofitService
+        val call = service.getGPTResponse(request)
+        call.enqueue(object : Callback<GPTResponse> {
+            override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
+                if (response.isSuccessful) {
+                    val gptResponse = response.body()
+                    gptResponse?.let {
+                        val receivedMessage = it.data.response
+                        // val positiveMessages = it.data.positive
+
+                        receiveMessage("${receivedMessage}")
+
+                        if (reqType == "TRANSFORM_CONFIRM") {
+                            receiveMessage("\"${userInput}\"으로 긍정적인 마음을 가지는 걸로 하자!")
+                        } else if (it.data.positive != null) {
+                            val positiveMessages = it.data.positive
+                            positiveMessages.forEachIndexed { index, message ->
+                                Log.d("PositiveMessage", message)
+                                receiveMessage("${index + 1}. $message")
+                            }
+                            receiveMessage("위의 세 문장을 참고해서 부정적인 문장을 긍정적인 문장으로 바꿔보자!")
+                            waitingForPositiveResponse = true
+                        }
+                    }
+                } else {
+                    val errorMessage =
+                        "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
+                    Log.e("API Communication", errorMessage)
+                    Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
+                Log.e("API Communication", "API 통신 실패", t)
+                runOnUiThread {
+                    Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+    }
+
+    private fun receiveMessage(message: String) {
+        runOnUiThread {
+            val chatItem = ChatItem(message, isSentByMe = false)
+            chatItems.add(chatItem)
+            chatadapter.notifyItemInserted(chatItems.size - 1)
+            binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
+            addToConversationHistory("GPT: $message")
+            val receivedMessage = Message("0", message)
+            messageList.add(receivedMessage)
+            Log.d("MessageList", "All Messages:")
+            for (msg in messageList) {
+                Log.d("MessageList", "${msg.sentBy}, ${msg.message}")
+            }
+        }
     }
 
     private fun sendFirstSentenceToGPT(data: EmotionResult) {
@@ -223,12 +302,26 @@ class SentenceActivity : AppCompatActivity() {
                         val gptResponse = response.body()
                         gptResponse?.let {
                             val receivedMessage = it.data.response
-                            receiveMessage("${data.sentence}"+"라는 말을 했네!\n"+"${receivedMessage}")
+                            val positiveMessages = it.data.positive
+
+                            receiveMessage("${data.sentence}" + "라는 말을 했네!")
+                            receiveMessage("${receivedMessage}")
+
+                            if (positiveMessages != null) {
+                                positiveMessages.forEachIndexed { index, message ->
+                                    Log.d("PositiveMessage", message)
+                                    receiveMessage("${index + 1}. $message")
+                                }
+                                receiveMessage("위의 세 문장을 참고해서 부정적인 문장을 긍정적인 문장으로 바꿔보자!")
+                                waitingForPositiveResponse = true
+                            }
                         }
                     } else {
-                        val errorMessage = "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
+                        val errorMessage =
+                            "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
                         Log.e("API Communication_First", errorMessage)
-                        Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
 
@@ -240,60 +333,6 @@ class SentenceActivity : AppCompatActivity() {
                 }
             })
         }
-    }
-
-    private fun sendStoredEmotionData() {
-        if (emotionDataList.isNotEmpty()) {
-            // 원하는 인덱스를 지정하여 데이터를 전송
-            val index = 1 // 예시로 두 번째 데이터를 전송
-            if (index < emotionDataList.size) {
-                val data = emotionDataList[index]
-                val message = "Sentiment: ${determineReqSent(data.sentiment)}, Sentence: ${data.sentence}"
-                receiveMessage(message)
-            } else {
-                Toast.makeText(this, "인덱스가 범위를 벗어났습니다.", Toast.LENGTH_SHORT).show()
-            }
-        } else {
-            Toast.makeText(this, "저장된 데이터가 없습니다.", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun sendGPTRequest(userInput: String) {
-        // 0~6사이가 아닌 경우에 받는 내용으로는 변환받을 수 있도록
-        val reqType = determineReqType(1)
-        val reqSent = determineReqSent(1)
-
-        val request = GPTRequest(
-            userId = 0,
-            context = userInput,
-            reqType = reqType,
-            reqSent = reqSent
-        )
-
-        val service = RetrofitApi.getRetrofitService
-        val call = service.getGPTResponse(request)
-        call.enqueue(object : Callback<GPTResponse> {
-            override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
-                if (response.isSuccessful) {
-                    val gptResponse = response.body()
-                    gptResponse?.let {
-                        val receivedMessage = it.data.response
-                        receiveMessage("${receivedMessage}" + "\n다음 문장으로 넘어가고 싶으면 \'다음\'이라고 적어줘!")
-                    }
-                } else {
-                    val errorMessage = "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
-                    Log.e("API Communication", errorMessage)
-                    Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
-                Log.e("API Communication", "API 통신 실패", t)
-                runOnUiThread {
-                    Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
     }
 
     private fun determineReqType(sentiment: Int): String {

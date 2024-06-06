@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/left_chat_view"
         android:background="@drawable/received_message_background"
-        android:backgroundTint="@color/white"
+        android:backgroundTint="#CBFFFFFF"
         android:layout_marginEnd="80dp"
         android:padding="13dp">
 
@@ -19,7 +19,7 @@
             android:id="@+id/left_chat_txt"
             android:textColor="@color/black"
             android:fontFamily="@font/pretendardmedium"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:text="Hello World"/>
 
     </LinearLayout>
@@ -39,7 +39,7 @@
             android:layout_height="wrap_content"
             android:id="@+id/right_chat_txt"
             android:textColor="@color/black"
-            android:textSize="18sp"
+            android:textSize="15sp"
             android:fontFamily="@font/pretendardmedium"
             android:text="Hello World"/>
 
