@@ -4,12 +4,11 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import com.example.dou.databinding.FragmentEmoBinding
+import com.example.dou.databinding.ActivityEmotionBinding
 import com.github.ybq.android.spinkit.style.ThreeBounce
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,8 +24,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 
-class EmoFragment : Fragment() {
-    private lateinit var binding: FragmentEmoBinding
+class EmotionActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityEmotionBinding
     private lateinit var naverSpeechService: NaverSpeechService
 
     private val apiKey: String by lazy {
@@ -37,21 +36,23 @@ class EmoFragment : Fragment() {
         BuildConfig.INVOKE_URL
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentEmoBinding.inflate(inflater, container, false)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        binding = ActivityEmotionBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // 뒤로가기 버튼을 누를 때 Toast 메시지 표시
+                Toast.makeText(this@EmotionActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
+            }
+        })
 
         val progressBar = binding.spinKit
         val threeBounce = ThreeBounce()
         progressBar.setIndeterminateDrawable(threeBounce)
-
-        return binding.root
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
 
         // Retrofit 빌더 설정
         val retrofit = Retrofit.Builder()
@@ -62,7 +63,7 @@ class EmoFragment : Fragment() {
 
         naverSpeechService = retrofit.create(NaverSpeechService::class.java)
 
-        val fileUri = arguments?.getString("fileUri")
+        val fileUri = intent.getStringExtra("fileUri")
         if (fileUri != null) {
             Log.d("FileUri", "fileUri가 존재합니다: $fileUri")
 
@@ -118,11 +119,12 @@ class EmoFragment : Fragment() {
 
     private fun handleResponse(sentences: String?, originalSentences: String?) {
         if (sentences != null && originalSentences != null) {
-            val intent = Intent(requireContext(), SentenceActivity::class.java).apply {
+            val intent = Intent(this, SentenceActivity::class.java).apply {
                 putExtra("sentences", sentences)
                 putExtra("originalSentences", originalSentences)
             }
-            requireActivity().startActivity(intent)
+            startActivity(intent)
+            finish()
         }
     }
 }

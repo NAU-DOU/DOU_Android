@@ -8,7 +8,6 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivitySentenceBinding
-import com.google.android.material.snackbar.Snackbar
 import model.Message
 import retrofit2.Call
 import retrofit2.Callback
@@ -37,12 +36,8 @@ class SentenceActivity : AppCompatActivity() {
         // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // 뒤로가기 버튼을 누를 때 Snackbar 메시지 표시
-                val snackbar = Snackbar.make(binding.root, "뒤로가기를 할 수 없어\n도우와의 대화를 종료하고 싶으면 '도우와의 대화를 마무리하고 나가기' 버튼을 눌러줘", Snackbar.LENGTH_INDEFINITE)
-                snackbar.setAction("확인") {
-                    snackbar.dismiss()
-                }
-                snackbar.show()
+                // 뒤로가기 버튼을 누를 때 Toast 메시지 표시
+                Toast.makeText(this@SentenceActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
             }
         })
 
@@ -72,7 +67,7 @@ class SentenceActivity : AppCompatActivity() {
         }
 
         binding.btnEnd.setOnClickListener {
-            val intent = Intent(this, HomeFragment::class.java)
+            val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
 
             // Toast 메시지 표시
@@ -207,7 +202,6 @@ class SentenceActivity : AppCompatActivity() {
 
         if (waitingForPositiveResponse) {
             sendGPTRequest(userInput, "TRANSFORM_CONFIRM", "분노")
-            receiveMessage("좋아! 그러면 \'${userInput}\' 이 문장으로 바꾸도록 할게!\n우리 긍정적인 생각 더 많이 하자!")
             waitingForPositiveResponse = false
         } else {
             sendGPTRequest(userInput, determineReqType(1), determineReqSent(1))

@@ -207,5 +207,11 @@ data class GPTData(
 )
 
 
+data class ClovaSpeechResponse(
+    val segments: List<Segment>
+)
 
+data class Segment(
+    val text: String
+)
 

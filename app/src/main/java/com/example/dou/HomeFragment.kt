@@ -132,34 +132,38 @@ class HomeFragment : Fragment() {
 
             // 생성된 파일의 URI가 있는지 확인하고 전달
             createdFileUri?.let { uri ->
-                // Bundle에 데이터를 추가하여 EmotionFragment로 전달
-                val bundle = Bundle()
-                bundle.putString("fileUri", uri.toString())
+                // STT 변환 요청
+                //requestSttConversion(uri)
 
-                // EmotionFragment로 이동하면서 Bundle 데이터 전달
-                navController.navigate(R.id.action_homeFragment_to_emoFragment2, bundle)
+//                // EmotionFragment로 이동
+//                val bundle = Bundle()
+//                bundle.putString("fileUri", uri.toString())
+//                navController.navigate(R.id.action_homeFragment_to_emoFragment2, bundle)
+
+                // EmotionActivity로 이동
+                val intent = Intent(requireContext(), EmotionActivity::class.java).apply {
+                    putExtra("fileUri", uri.toString())
+                }
+                requireActivity().startActivity(intent)
+
             } ?: run {
                 // 생성된 파일의 URI가 없는 경우에 대한 처리
                 Toast.makeText(requireContext(), "파일이 아직 생성되지 않았습니다.", Toast.LENGTH_SHORT).show()
             }
         }
 
-
         return binding.root
     }
 
     private fun cancelRecording() {
         if (state) {
-            // 녹음 중이면 녹음 중지
-            //stopRecording()
-            //binding.recordFin.visibility = View.VISIBLE
+            stopRecording()
             binding.recordDesLayoutFirst.visibility = View.VISIBLE
             binding.recordFin.visibility = View.INVISIBLE
             binding.recordCancel.visibility = View.INVISIBLE
             binding.recordDesLayout1.visibility = View.INVISIBLE
             binding.recordDesLayout3.visibility = View.INVISIBLE
 
-            // 저장 중이던 파일 삭제
             output?.let {
                 val file = File(it)
                 if (file.exists()) {
@@ -173,9 +177,7 @@ class HomeFragment : Fragment() {
                 }
             }
         }
-        // 녹음 상태 초기화
         state = false
-        // 취소 메시지 표시
         Toast.makeText(
             requireContext().applicationContext,
             "녹음이 취소되었습니다",
@@ -183,18 +185,14 @@ class HomeFragment : Fragment() {
         ).show()
     }
 
-    // 녹음을 진행하고 파일을 생성함, 녹음 진행 후에 저장하는 것은 createAudioFile()에서 함
-    // 파일이 사용자에게 저장될 위치와 이름을 선택받기 위해서 추가작업이 필요하기 때문에 createAudioFile()을 사용하는 것
-    // 녹음을 시작하고 파일 생성
     private fun startRecording() {
         val fileName: String = "audio_${Date().time}.mp3"
         val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         val outputFile = File(outputDir, fileName)
 
-        // 녹음 파일을 생성하고 녹음 설정
         mediaRecorder = MediaRecorder()
         mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4) // MP3 형식으로 설정
+        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
         mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
         mediaRecorder?.setOutputFile(outputFile.absolutePath)
 
@@ -207,10 +205,7 @@ class HomeFragment : Fragment() {
                 "녹음을 시작했습니다.",
                 Toast.LENGTH_SHORT
             ).show()
-
-            // 녹음 파일 경로 저장
             output = outputFile.absolutePath
-
         } catch (e: IllegalStateException) {
             e.printStackTrace()
             Toast.makeText(
@@ -228,23 +223,13 @@ class HomeFragment : Fragment() {
         }
     }
 
-    // 녹음 중지 및 오디오 파일 생성
     private fun stopRecording() {
         if (state) {
             mediaRecorder?.stop()
             mediaRecorder?.reset()
             mediaRecorder?.release()
             state = false
-
-//            Toast.makeText(
-//                requireContext().applicationContext,
-//                "녹음을 완료했습니다.",
-//                Toast.LENGTH_SHORT
-//            ).show()
-
-            // 녹음 파일 생성
             createAudioFile()
-
         } else {
             Toast.makeText(
                 requireContext().applicationContext,
@@ -276,7 +261,6 @@ class HomeFragment : Fragment() {
                         Log.d("CreateAudioFile", "File conversion succeeded.")
                         createdFileUri = Uri.fromFile(outputFile)
                         file.delete()
-                        // 저장된 파일의 경로와 URI를 로그로 출력
                         Log.d("CreateAudioFile", "Saved file path: ${outputFile.path}")
                         Log.d("CreateAudioFile", "Saved file URI: $uri")
                         Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
@@ -300,6 +284,39 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
+//    private fun requestSttConversion(uri: Uri) {
+//        val retrofit = Retrofit.Builder()
+//            .baseUrl("YOUR_CLOVA_SPEECH_API_BASE_URL")
+//            .client(OkHttpClient.Builder().build())
+//            .addConverterFactory(GsonConverterFactory.create())
+//            .build()
+//
+//        val service = retrofit.create(ClovaSpeechApiService::class.java)
+//
+//        val params = "{\"language\":\"ko-KR\"}".toRequestBody("application/json".toMediaTypeOrNull())
+//        val audioFile = File(uri.path!!)
+//        val requestFile = audioFile.asRequestBody("audio/flac".toMediaTypeOrNull())
+//        val body = MultipartBody.Part.createFormData("audio", audioFile.name, requestFile)
+//
+//        val call = service.recognizeSpeech(params, body)
+//        call.enqueue(object : Callback<ClovaSpeechResponse> {
+//            override fun onResponse(call: Call<ClovaSpeechResponse>, response: Response<ClovaSpeechResponse>) {
+//                if (response.isSuccessful) {
+//                    val sttResponse = response.body()
+//                    sttResponse?.segments?.forEach {
+//                        Log.d("STT Response", "Segment: ${it.text}")
+//                    }
+//                } else {
+//                    Log.e("STT Request", "STT 요청 실패: ${response.code()} - ${response.errorBody()?.string()}")
+//                }
+//            }
+//
+//            override fun onFailure(call: Call<ClovaSpeechResponse>, t: Throwable) {
+//                Log.e("STT Request", "STT 요청 실패", t)
+//            }
+//        })
+//    }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
@@ -357,5 +374,4 @@ class HomeFragment : Fragment() {
         }
         return spannableString
     }
-
 }
