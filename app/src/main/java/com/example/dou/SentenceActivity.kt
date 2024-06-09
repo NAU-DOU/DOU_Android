@@ -296,13 +296,13 @@ class SentenceActivity : AppCompatActivity() {
                         val gptResponse = response.body()
                         gptResponse?.let {
                             val receivedMessage = it.data.response
-                            val positiveMessages = it.data.positive
+                            //val positiveMessages = it.data.positive
 
                             receiveMessage("${data.sentence}" + "라는 말을 했네!")
                             receiveMessage("${receivedMessage}")
 
-                            if (positiveMessages != null) {
-                                positiveMessages.forEachIndexed { index, message ->
+                            if (it.data.positive != null) {
+                                it.data.positive.forEachIndexed { index, message ->
                                     Log.d("PositiveMessage", message)
                                     receiveMessage("${index + 1}. $message")
                                 }
