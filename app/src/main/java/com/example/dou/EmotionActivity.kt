@@ -139,7 +139,7 @@ class EmotionActivity : AppCompatActivity() {
             baseAi.put("role", "user")
             baseAi.put("content", "단순히 내가 요청한 정보만 제공해주면 돼. 1, 2, 3 이런 식으로 안 나눠도 되고 요약도 안해도 돼 그냥 내가 보낸 문장들을 문단으로 나눠줘 그리고 문단의 뒤에 \n을 붙여서 표현해줬으면 좋겠어, 문장을 ''로 묶지 말아줘 그냥 문단의 뒤에 \n만 붙여줘")
             userMsg.put("role", "user")
-            userMsg.put("content", "$userInput + \n 이 글을 문단으로 나눠주고 문단의 뒤에 \n을 붙여줘")
+            userMsg.put("content", "$userInput \n 라는 글을 문단으로 나눠주고 문단의 뒤에 \n을 붙여줘")
 
             arr.put(baseAi)
             arr.put(userMsg)
