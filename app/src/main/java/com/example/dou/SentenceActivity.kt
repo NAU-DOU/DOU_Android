@@ -13,6 +13,13 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+/*
+TODO 1) API 요청 실패한 경우에 다시 요청할 수 있도록 해야 함 => 현재는 한번 요청한 경우 다시 요청할 수 없도록 막혀 있음
+     2) API 요청이 성공하여도 화면에 뜨기 전에 다른 탭으로 이동하면 다른 탭에서 이전 요청 내용이 작성되는 문제가 발생함 '
+     => 작성이 완료될 때 까지 다른 탭으로 넘어가지 못하도록 해야 할 듯
+     3) 데이터 저장을 문단별로 한다고 하면 어떻게 저장하고 전달할 것인지
+*/
+
 class SentenceActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySentenceBinding
     private lateinit var adapter: SentenceAdapter
@@ -36,6 +43,9 @@ class SentenceActivity : AppCompatActivity() {
         // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                // 대화 내용을 저장
+                //saveConversationData()
+
                 // 뒤로가기 버튼을 누를 때 Toast 메시지 표시
                 Toast.makeText(this@SentenceActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
             }
@@ -191,6 +201,17 @@ class SentenceActivity : AppCompatActivity() {
             chatadapter.notifyItemInserted(chatItems.size - 1)
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
             binding.editTxt.text.clear()
+
+            // 사용자가 보낸 메시지를 messageList에 추가
+            val userMessage = Message("1", message)
+            messageList.add(userMessage)
+
+            // 사용자가 보낸 메시지를 추가한 후 전체 메시지 리스트를 로그에 출력
+            Log.d("MessageList", "All Messages:")
+            for (msg in messageList) {
+                Log.d("MessageList", "${msg.sentBy}, ${msg.message}")
+            }
+
             handleUserInput(message)
         } else {
             Toast.makeText(this, "메시지를 입력해주세요.", Toast.LENGTH_SHORT).show()
@@ -328,6 +349,25 @@ class SentenceActivity : AppCompatActivity() {
             })
         }
     }
+
+//    private fun saveConversationData() {
+//        conversationHistoryMap.forEach { (position, pair) ->
+//            val isSent = pair.first
+//            val chatItems = pair.second
+//
+//            // 문단별로 데이터를 저장할 수 있도록 처리
+//            val conversationData = StringBuilder()
+//            conversationData.append("대화 $position - 시작\n")
+//            chatItems.forEach { chatItem ->
+//                conversationData.append(if (chatItem.isSentByMe) "User: " else "GPT: ")
+//                conversationData.append("${chatItem.message}\n")
+//            }
+//            conversationData.append("대화 $position - 종료\n")
+//
+//            // Log로 출력 (이 부분을 파일 저장 등으로 변경 가능)
+//            Log.d("ConversationData", conversationData.toString())
+//        }
+//    }
 
     private fun determineReqType(sentiment: Int): String {
         return when (sentiment) {
