@@ -17,7 +17,6 @@ import retrofit2.Response
 TODO 1) API 요청 실패한 경우에 다시 요청할 수 있도록 해야 함 => 현재는 한번 요청한 경우 다시 요청할 수 없도록 막혀 있음
      2) API 요청이 성공하여도 화면에 뜨기 전에 다른 탭으로 이동하면 다른 탭에서 이전 요청 내용이 작성되는 문제가 발생함 '
      => 작성이 완료될 때 까지 다른 탭으로 넘어가지 못하도록 해야 할 듯
-     3) 데이터 저장을 문단별로 한다고 하면 어떻게 저장하고 전달할 것인지
 */
 
 class SentenceActivity : AppCompatActivity() {
@@ -33,6 +32,7 @@ class SentenceActivity : AppCompatActivity() {
     private val conversationHistoryMap = mutableMapOf<Int, MutableList<ChatItem>>()
     private var selectedConversation: Int = 0
     private var waitingForPositiveResponse: Boolean = false
+    private var isApiRequestInProgress: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +89,11 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun onSentenceItemClick(position: Int) {
+        if (isApiRequestInProgress) {
+            Toast.makeText(this, "현재 요청이 진행 중입니다. 완료 후 시도해주세요.", Toast.LENGTH_SHORT).show()
+            return
+        }
+
         // 현재 대화 내용을 저장
         saveConversation(selectedConversation)
 
@@ -137,11 +142,13 @@ class SentenceActivity : AppCompatActivity() {
         val service = RetrofitApi.getRetrofitService
         val call = service.emotion(request)
 
+        isApiRequestInProgress = true
         call.enqueue(object : Callback<EmotionResponse> {
             override fun onResponse(
                 call: Call<EmotionResponse>,
                 response: Response<EmotionResponse>
             ) {
+                isApiRequestInProgress = false
                 if (response.isSuccessful) {
                     val emotionResponse = response.body()
                     if (emotionResponse != null) {
@@ -183,13 +190,22 @@ class SentenceActivity : AppCompatActivity() {
                         "EmotionAnalyzer",
                         "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}"
                     )
+                    retryAnalyzeEmotion(sentence) // 실패 시 재시도
                 }
             }
 
             override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
+                isApiRequestInProgress = false
                 Log.e("EmotionAnalyzer", "API 호출 실패", t)
+                retryAnalyzeEmotion(sentence) // 실패 시 재시도
             }
         })
+    }
+
+    // API 요청 실패 시에 재시도 기능 추가함
+    private fun retryAnalyzeEmotion(sentence: String) {
+        Toast.makeText(this, "API 요청 실패. 다시 시도합니다...", Toast.LENGTH_SHORT).show()
+        analyzeEmotion(sentence)
     }
 
     private fun sendMessage() {
@@ -238,8 +254,12 @@ class SentenceActivity : AppCompatActivity() {
 
         val service = RetrofitApi.getRetrofitService
         val call = service.getGPTResponse(request)
+
+        // Api 요청중이면 탭 이동이 불가능하도록 추가한 조건
+        isApiRequestInProgress = true
         call.enqueue(object : Callback<GPTResponse> {
             override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
+                isApiRequestInProgress = false
                 if (response.isSuccessful) {
                     val gptResponse = response.body()
                     gptResponse?.let {
@@ -264,16 +284,24 @@ class SentenceActivity : AppCompatActivity() {
                         "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
                     Log.e("API Communication", errorMessage)
                     Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
+                    retrySendGPTRequest(userInput, reqType, reqSent) // 실패 시 재시도
                 }
             }
 
             override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
+                isApiRequestInProgress = false
                 Log.e("API Communication", "API 통신 실패", t)
                 runOnUiThread {
                     Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
                 }
+                retrySendGPTRequest(userInput, reqType, reqSent) // 실패 시 재시도
             }
         })
+    }
+
+    private fun retrySendGPTRequest(userInput: String, reqType: String, reqSent: String) {
+        Toast.makeText(this, "API 요청 실패. 다시 시도합니다...", Toast.LENGTH_SHORT).show()
+        sendGPTRequest(userInput, reqType, reqSent)
     }
 
     private fun receiveMessage(message: String) {
@@ -310,13 +338,14 @@ class SentenceActivity : AppCompatActivity() {
             val service = RetrofitApi.getRetrofitService
             val call = service.getGPTResponse(request)
 
+            isApiRequestInProgress = true
             call.enqueue(object : Callback<GPTResponse> {
                 override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
+                    isApiRequestInProgress = false
                     if (response.isSuccessful) {
                         val gptResponse = response.body()
                         gptResponse?.let {
                             val receivedMessage = it.data.response
-                            //val positiveMessages = it.data.positive
 
                             receiveMessage("${data.sentence}" + "라는 말을 했네!")
                             receiveMessage("${receivedMessage}")
@@ -336,14 +365,17 @@ class SentenceActivity : AppCompatActivity() {
                         Log.e("API Communication_First", errorMessage)
                         Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT)
                             .show()
+                        retrySendGPTRequest(data.sentence, reqType, reqSent) // 실패 시 재시도
                     }
                 }
 
                 override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
+                    isApiRequestInProgress = false
                     Log.e("API Communication", "API 통신 실패", t)
                     runOnUiThread {
                         Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
                     }
+                    retrySendGPTRequest(data.sentence, reqType, reqSent) // 실패 시 재시도
                 }
             })
         }
