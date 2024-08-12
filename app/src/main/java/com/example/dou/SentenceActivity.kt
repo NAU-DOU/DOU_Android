@@ -30,7 +30,7 @@ class SentenceActivity : AppCompatActivity() {
     private val messageList = ArrayList<Message>()
 
     private val emotionDataList = mutableListOf<EmotionResult>()
-    private val conversationHistoryMap = mutableMapOf<Int, Pair<Boolean, MutableList<ChatItem>>>()
+    private val conversationHistoryMap = mutableMapOf<Int, MutableList<ChatItem>>()
     private var selectedConversation: Int = 0
     private var waitingForPositiveResponse: Boolean = false
 
@@ -44,7 +44,7 @@ class SentenceActivity : AppCompatActivity() {
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 // 대화 내용을 저장
-                //saveConversationData()
+                logAllConversations()
 
                 // 뒤로가기 버튼을 누를 때 Toast 메시지 표시
                 Toast.makeText(this@SentenceActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
@@ -90,17 +90,14 @@ class SentenceActivity : AppCompatActivity() {
 
     private fun onSentenceItemClick(position: Int) {
         // 현재 대화 내용을 저장
-        conversationHistoryMap[selectedConversation] = Pair(
-            conversationHistoryMap[selectedConversation]?.first ?: false,
-            chatItems.toMutableList()
-        )
+        saveConversation(selectedConversation)
 
         // 화면 초기화
         chatItems.clear()
         chatadapter.notifyDataSetChanged()
 
         // 선택된 대화 항목의 내용을 불러오기
-        conversationHistoryMap[position]?.second?.let { savedChatItems ->
+        conversationHistoryMap[position]?.let { savedChatItems ->
             chatItems.addAll(savedChatItems)
         }
 
@@ -112,10 +109,9 @@ class SentenceActivity : AppCompatActivity() {
 
         if (position < emotionDataList.size) {
             binding.tvSentence.text = emotionDataList[position].sentence
-            if (conversationHistoryMap[position]?.first == false) {
+            if (conversationHistoryMap[position] == null) {
                 sendFirstSentenceToGPT(emotionDataList[position]) // 클릭된 항목에 해당하는 문장을 사용하여 GPT 호출
-                conversationHistoryMap[position] =
-                    Pair(true, chatItems.toMutableList()) // 플래그를 true로 설정
+                conversationHistoryMap[position] = mutableListOf() // 초기화
             }
         }
 
@@ -129,6 +125,10 @@ class SentenceActivity : AppCompatActivity() {
         if (chatItems.size > 0) {
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
         }
+    }
+
+    private fun saveConversation(position: Int) {
+        conversationHistoryMap[position] = chatItems.toMutableList()
     }
 
     private fun analyzeEmotion(sentence: String) {
@@ -175,8 +175,7 @@ class SentenceActivity : AppCompatActivity() {
                             // 첫 번째 대화를 항상 선택된 상태로 설정
                             binding.tvSentence.text = emotionDataList[0].sentence
                             sendFirstSentenceToGPT(emotionDataList[0])
-                            conversationHistoryMap[0] =
-                                Pair(true, mutableListOf()) // 첫 번째 대화에 대해 호출된 상태로 설정
+                            conversationHistoryMap[0] = mutableListOf() // 첫 번째 대화에 대해 초기화
                         }
                     }
                 } else {
@@ -202,20 +201,20 @@ class SentenceActivity : AppCompatActivity() {
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
             binding.editTxt.text.clear()
 
-            // 사용자가 보낸 메시지를 messageList에 추가
-            val userMessage = Message("1", message)
-            messageList.add(userMessage)
-
-            // 사용자가 보낸 메시지를 추가한 후 전체 메시지 리스트를 로그에 출력
-            Log.d("MessageList", "All Messages:")
-            for (msg in messageList) {
-                Log.d("MessageList", "${msg.sentBy}, ${msg.message}")
-            }
+            // 대화 내용 저장
+            saveConversation(selectedConversation, chatItem)
 
             handleUserInput(message)
         } else {
             Toast.makeText(this, "메시지를 입력해주세요.", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun saveConversation(position: Int, chatItem: ChatItem) {
+        if (!conversationHistoryMap.containsKey(position)) {
+            conversationHistoryMap[position] = mutableListOf()
+        }
+        conversationHistoryMap[position]?.add(chatItem)
     }
 
     private fun handleUserInput(userInput: String) {
@@ -245,7 +244,6 @@ class SentenceActivity : AppCompatActivity() {
                     val gptResponse = response.body()
                     gptResponse?.let {
                         val receivedMessage = it.data.response
-                        // val positiveMessages = it.data.positive
 
                         receiveMessage("${receivedMessage}")
 
@@ -285,6 +283,7 @@ class SentenceActivity : AppCompatActivity() {
             chatadapter.notifyItemInserted(chatItems.size - 1)
             binding.chatRecycler.smoothScrollToPosition(chatItems.size - 1)
             addToConversationHistory("GPT: $message")
+            saveConversation(selectedConversation, chatItem)
             val receivedMessage = Message("0", message)
             messageList.add(receivedMessage)
             Log.d("MessageList", "All Messages:")
@@ -350,24 +349,22 @@ class SentenceActivity : AppCompatActivity() {
         }
     }
 
-//    private fun saveConversationData() {
-//        conversationHistoryMap.forEach { (position, pair) ->
-//            val isSent = pair.first
-//            val chatItems = pair.second
-//
-//            // 문단별로 데이터를 저장할 수 있도록 처리
-//            val conversationData = StringBuilder()
-//            conversationData.append("대화 $position - 시작\n")
-//            chatItems.forEach { chatItem ->
-//                conversationData.append(if (chatItem.isSentByMe) "User: " else "GPT: ")
-//                conversationData.append("${chatItem.message}\n")
-//            }
-//            conversationData.append("대화 $position - 종료\n")
-//
-//            // Log로 출력 (이 부분을 파일 저장 등으로 변경 가능)
-//            Log.d("ConversationData", conversationData.toString())
-//        }
-//    }
+    private fun logAllConversations() {
+        conversationHistoryMap.forEach { (position, chatItems) ->
+            val conversationData = StringBuilder()
+            conversationData.append("대화 $position - 시작\n")
+
+            chatItems.forEach { chatItem ->
+                val sender = if (chatItem.isSentByMe) "User" else "GPT"
+                conversationData.append("$sender: ${chatItem.message}\n")
+            }
+
+            conversationData.append("대화 $position - 종료\n")
+
+            // 로그로 출력
+            Log.d("ConversationData_Tab_$position", conversationData.toString())
+        }
+    }
 
     private fun determineReqType(sentiment: Int): String {
         return when (sentiment) {
@@ -397,5 +394,15 @@ class SentenceActivity : AppCompatActivity() {
     private fun addToConversationHistory(message: String) {
         conversationHistory.add(message)
         currentConversation = conversationHistory.joinToString(separator = "\n")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        logAllConversations() // 액티비티 종료 시 대화 내용 로그로 출력
+    }
+
+    override fun onPause() {
+        super.onPause()
+        logAllConversations() // 액티비티 일시 중지 시 대화 내용 로그로 출력
     }
 }
