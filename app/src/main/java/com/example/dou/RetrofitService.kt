@@ -3,6 +3,7 @@ package com.example.dou
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -44,4 +45,9 @@ interface RetrofitService {
     @POST("/gpt")
     fun getGPTResponse(@Body request: GPTRequest): Call<GPTResponse>
 
+    @POST("/room")
+    fun roomAdd(@Body request: RoomAddRequest) : Call<RoomAddRespose>
+
+    @PATCH("/room")
+    fun roomPatch(@Body request: RoomSentPatchRequest) : Call<RoomAddRespose>
 }

@@ -64,10 +64,15 @@ class SentenceActivity : AppCompatActivity() {
 
         val sentences = intent.getStringExtra("sentences")
         val originalSentences = intent.getStringExtra("originalSentences")
+        val roomId = intent.getIntExtra("roomId",-1)
         Log.d("ChatActivity", "Received sentences: $sentences")
+        Log.d("SentenceActivity", "Received roomId: $roomId")
 
         if (sentences != null && originalSentences != null) {
-            analyzeEmotion(sentences)
+            analyzeEmotion(sentences,roomId)
+
+            // 전체 대화 내용 요약을 위해서 summary 시도하기
+            summaryChat(originalSentences,roomId)
         } else {
             Log.d("ChatActivity", "Sentences is null")
         }
@@ -86,6 +91,47 @@ class SentenceActivity : AppCompatActivity() {
             // 현재 Activity 종료
             finish()
         }
+    }
+
+    // room>record>chat인데 room에서는 지금 summary를 안하고 있어서 잠시 주석처리
+    // summary 만들고 나서 summary를 바탕으로 다시 감정 분석하고, 해당 내용을 roomId에 넣어줘야됨..
+
+    // Swagger에서 gpt summary부분 이용하기
+    private fun summaryChat(context: String, roomId: Int){
+        // SummaryRequest 생성
+        val request = SummaryRequest(userId = 0, context = context)
+        Log.d("SummaryRequest", "Request: $request")
+
+        // Retrofit 서비스 인터페이스 호출
+        val service = RetrofitApi.getRetrofitService
+        val call = service.summary(request)
+
+        // 비동기적으로 API 요청 실행
+        call.enqueue(object : Callback<SummaryResponse> {
+            override fun onResponse(call: Call<SummaryResponse>, response: Response<SummaryResponse>) {
+                if (response.isSuccessful) {
+                    // API 요청이 성공한 경우
+                    val summaryResponse = response.body()
+                    val roomSummaryResult = summaryResponse?.data?.summary
+
+                    /* TODO
+                    *   1) API 요청 후 받은 요약 내용을 가지고 감정 분석 실시 2) 감정 분석 후 sentiment를 가지고 다시 해당 room의 sentiment를 조절해야 함*/
+                    if (roomSummaryResult != null) {
+                        analyzeEmotion(roomSummaryResult, roomId = roomId)
+                    }
+
+                    Log.d("SummaryResponse", "Response: $summaryResponse")
+                } else {
+                    // 응답이 성공적이지 않은 경우 (예: 서버 에러)
+                    Log.e("SummaryResponse", "Failed with response code: ${response.code()}")
+                }
+            }
+
+            override fun onFailure(call: Call<SummaryResponse>, t: Throwable) {
+                // 네트워크 요청이 실패한 경우 (예: 네트워크 오류)
+                Log.e("SummaryRequest", "Request failed", t)
+            }
+        })
     }
 
     private fun onSentenceItemClick(position: Int) {
@@ -136,7 +182,7 @@ class SentenceActivity : AppCompatActivity() {
         conversationHistoryMap[position] = chatItems.toMutableList()
     }
 
-    private fun analyzeEmotion(sentence: String) {
+    private fun analyzeEmotion(sentence: String, roomId: Int) {
         val request = EmotionRequest(userId = 0, sentence = sentence)
         Log.d("EmotionRequest", "Request: $request")
         val service = RetrofitApi.getRetrofitService
@@ -184,29 +230,27 @@ class SentenceActivity : AppCompatActivity() {
                             sendFirstSentenceToGPT(emotionDataList[0])
                             conversationHistoryMap[0] = mutableListOf() // 첫 번째 대화에 대해 초기화
                         }
+
+                        // TODO => patch를 시도하도록 해야됨 왜냐면 마지막 summary에 대한 총 sentiment를 진행해야하기 때문
+                        // 마지막 감정 분석 결과를 바탕으로 roomSent를 계산하고, Patch 요청
+                        val finalSentiment = emotionDataList.lastOrNull()?.sentiment ?: 0
+                        roomPatchSentiment(roomId, finalSentiment)
                     }
                 } else {
                     Log.e(
                         "EmotionAnalyzer",
                         "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}"
                     )
-                    retryAnalyzeEmotion(sentence) // 실패 시 재시도
                 }
             }
 
             override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
                 isApiRequestInProgress = false
                 Log.e("EmotionAnalyzer", "API 호출 실패", t)
-                retryAnalyzeEmotion(sentence) // 실패 시 재시도
             }
         })
     }
 
-    // API 요청 실패 시에 재시도 기능 추가함
-    private fun retryAnalyzeEmotion(sentence: String) {
-        Toast.makeText(this, "API 요청 실패. 다시 시도합니다...", Toast.LENGTH_SHORT).show()
-        analyzeEmotion(sentence)
-    }
 
     private fun sendMessage() {
         val message = binding.editTxt.text.toString().trim()
@@ -436,5 +480,38 @@ class SentenceActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         logAllConversations() // 액티비티 일시 중지 시 대화 내용 로그로 출력
+    }
+
+    private fun roomPatchSentiment(roomId: Int, roomSent: Int){
+        val request = RoomSentPatchRequest(
+            roomId = roomId,
+            roomSent = roomSent
+        )
+
+        val service = RetrofitApi.getRetrofitService
+        val call = service.roomPatch(request)
+
+        call.enqueue(object: Callback<RoomAddRespose>{
+            override fun onResponse(
+                call: Call<RoomAddRespose>,
+                response: Response<RoomAddRespose>
+            ) {
+                if (response.isSuccessful) {
+                    // API 요청이 성공한 경우
+                    val patchResponse = response.body()
+                    Log.d("RoomPatch", "Patch 성공: $patchResponse")
+                    // 성공 처리 로직 추가
+                } else {
+                    // 응답이 성공적이지 않은 경우 (예: 서버 에러)
+                    Log.e("RoomPatch", "Patch 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    // 실패 처리 로직 추가
+                }
+            }
+
+            override fun onFailure(call: Call<RoomAddRespose>, t: Throwable) {
+                // 네트워크 요청이 실패한 경우 (예: 네트워크 오류)
+                Log.e("RoomPatch", "Patch 요청 실패", t)
+            }
+        })
     }
 }

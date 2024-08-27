@@ -71,9 +71,9 @@ class ChatActivity : AppCompatActivity() {
                     if (summaryResponse != null) {
 
                         val response = summaryResponse.data
-                        Log.d("SummaryResponse", "Summary: ${response.response}")
+                        Log.d("SummaryResponse", "Summary: ${response.summary}")
 
-                        receiveMessage("\'${response.response}\'" + "라는 대화를 했네")
+                        receiveMessage("\'${response.summary}\'" + "라는 대화를 했네")
                     }
                 } else {
                     Log.e("SummaryAPI", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")

@@ -55,7 +55,6 @@ class EmotionActivity : AppCompatActivity() {
         // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // 뒤로가기 버튼을 누를 때 Toast 메시지 표시
                 Toast.makeText(this@EmotionActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
             }
         })
@@ -112,10 +111,10 @@ class EmotionActivity : AppCompatActivity() {
                         if (response.isSuccessful) {
                             val responseBody = response.body()
                             val originalSentences = responseBody?.text ?: ""
-                            //val sentences = originalSentences.replace(".", ".\n")
                             Log.d("NaverSTT", "Response: $originalSentences")
-                            sendGPTParagraphMessage(originalSentences)
-                            //handleResponse(originalSentences)
+                            addRoom { roomId ->
+                                sendGPTParagraphMessage(originalSentences, roomId)
+                            }
                         } else {
                             val errorBody = response.errorBody()?.string()
                             Log.e("NaverSTT", "Error response: ${response.code()} - $errorBody")
@@ -128,7 +127,7 @@ class EmotionActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendGPTParagraphMessage(userInput: String) {
+    private fun sendGPTParagraphMessage(userInput: String, roomId: Int) {
         val apiKey = BuildConfig.API_KEY
         Log.d("apikey", apiKey)
 
@@ -174,12 +173,10 @@ class EmotionActivity : AppCompatActivity() {
                                 val jsonArray = jsonObject.getJSONArray("choices")
                                 if (jsonArray.length() > 0) {
                                     val content = jsonArray.getJSONObject(0).getJSONObject("message").getString("content")
-                                    //receiveMessage(content)
-                                    //sendMessageListToServer()  // 서버로 메시지 목록을 전송
 
                                     Log.d("Paragraph Result", content)
 
-                                    handleResponse(content,userInput)
+                                    handleResponse(content, userInput, roomId)
                                 } else {
                                     Log.e("API Communication", "No choices found in response.")
                                     Toast.makeText(this@EmotionActivity, "응답에서 선택지를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -205,57 +202,52 @@ class EmotionActivity : AppCompatActivity() {
             })
         } catch (e: Exception) {
             Log.e("Exception", "예외 발생", e)
-
             Toast.makeText(this@EmotionActivity, "예외 발생", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // 문장의 문단을 나눠주도록 하는 방식
-    private fun sendGPTRequest(userInput: String) {
-        val request = GPTRequest(
-            userId = 0,
-            context = userInput + "\n이 글을 세부 문단으로 나눠주고 각 문단의 뒤에 \n을 붙여줘",
-            reqType = "COMMON_RESPONSE",
-            reqSent = "행복"
-        )
-
-        val service = RetrofitApi.getRetrofitService
-        val call = service.getGPTResponse(request)
-        call.enqueue(object : Callback<GPTResponse> {
-            override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
-                if (response.isSuccessful) {
-                    val gptResponse = response.body()
-                    gptResponse?.let {
-                        val receivedMessage = it.data.response
-                        Log.d("Paragraph Result", receivedMessage)
-
-                        handleResponse(userInput, receivedMessage)
-                    }
-                } else {
-                    val errorMessage =
-                        "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
-                    Log.e("API Communication", errorMessage)
-                    Toast.makeText(this@EmotionActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
-                }
-            }
-
-            override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
-                Log.e("API Communication", "API 통신 실패", t)
-                runOnUiThread {
-                    Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
-                }
-            }
-        })
-    }
-
-    private fun handleResponse(sentences: String? ,originalSentences: String?) {
-        if (sentences != null && originalSentences != null) {
+    private fun handleResponse(sentences: String?, originalSentences: String?, roomId: Int?) {
+        if (sentences != null && originalSentences != null && roomId != null) {
             val intent = Intent(this, SentenceActivity::class.java).apply {
                 putExtra("sentences", sentences)
                 putExtra("originalSentences", originalSentences)
+                putExtra("roomId", roomId)
             }
             startActivity(intent)
             finish()
         }
+    }
+
+    private fun addRoom(onRoomCreated: (Int) -> Unit) {
+        val request = RoomAddRequest(roomUserId = 0, roomSent = 1)
+
+        val service = RetrofitApi.getRetrofitService
+        val call = service.roomAdd(request)
+
+        call.enqueue(object : Callback<RoomAddRespose> {
+            override fun onResponse(call: Call<RoomAddRespose>, response: Response<RoomAddRespose>) {
+                if (response.isSuccessful) {
+                    val roomAddResponse = response.body()
+                    val roomId = roomAddResponse?.data?.room_id
+                    Log.d("roomAddResponse", "Response: $roomAddResponse")
+                    Log.d("roomId", "RoomId Check: $roomId")
+
+                    if (roomId != null) {
+                        onRoomCreated(roomId)
+                    } else {
+                        Log.e("roomId", "Room ID is null")
+                        Toast.makeText(this@EmotionActivity, "Room ID 생성 실패", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    Log.d("roomAddResponse", "Failed with response code: ${response.code()}")
+                    Toast.makeText(this@EmotionActivity, "Room 생성 실패", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onFailure(call: Call<RoomAddRespose>, t: Throwable) {
+                Log.e("RoomAddRequest", "Request failed", t)
+                Toast.makeText(this@EmotionActivity, "Room 생성 중 오류 발생", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 }

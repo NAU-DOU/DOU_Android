@@ -1,6 +1,7 @@
 package com.example.dou
 
 import com.google.gson.annotations.SerializedName
+import java.io.Serial
 
 data class SignupRequest(
     @SerializedName("userEmail") val userEmail: String,
@@ -182,8 +183,8 @@ data class SummaryResponse(
 )
 
 data class SummaryData(
-    @SerializedName("response")
-    val response: String
+    @SerializedName("summary")
+    val summary: String
 )
 
 // GPT와의 대화
@@ -215,3 +216,40 @@ data class Segment(
     val text: String
 )
 
+data class RoomAddRequest(
+    @SerializedName("roomUserId")
+    val roomUserId : Int,
+    @SerializedName("roomSent")
+    val roomSent: Int
+)
+
+data class RoomAddRespose(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: RoomAddResult
+)
+
+data class RoomAddResult(
+    @SerializedName("user_id")
+    val user_id: Int,
+    @SerializedName("room_sent")
+    val room_sent: Int,
+    @SerializedName("room_date")
+    val room_date: String,
+    @SerializedName("created_at")
+    val created_at: String,
+    @SerializedName("room_id")
+    val room_id: Int
+)
+
+data class RoomSentPatchRequest(
+    @SerializedName("roomId")
+    val roomId : Int,
+    @SerializedName("roomSent")
+    val roomSent: Int
+)
