@@ -482,6 +482,7 @@ class SentenceActivity : AppCompatActivity() {
         logAllConversations() // 액티비티 일시 중지 시 대화 내용 로그로 출력
     }
 
+    // room을 생성하고자 할 때 사용하는 코드
     private fun roomPatchSentiment(roomId: Int, roomSent: Int){
         val request = RoomSentPatchRequest(
             roomId = roomId,
