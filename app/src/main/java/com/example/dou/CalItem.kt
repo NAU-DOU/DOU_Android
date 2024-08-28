@@ -1,3 +1,3 @@
 package com.example.dou
 
-class CalItem(val date: Int)
+class CalItem(val date: Int, val sentiment: Int?)

@@ -53,4 +53,10 @@ interface RetrofitService {
 
     @POST("/chat")
     fun chatPost(@Body request: List<ChatRequest>) : Call<ChatResponse>
+
+    @GET("/room/test")
+    fun getAllRooms() :Call<RoomListResponse>
+
+    @GET("/room/date")
+    fun getRoomDate(@Query("date") date: String): Call<RoomListResponse>
 }

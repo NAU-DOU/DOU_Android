@@ -6,4 +6,13 @@
     <color name="selected_icon_color">#1FFF1B</color>
     <color name="background_color">#171A1F</color>
     <color name="point_color">#1fff1b</color>
+
+    <color name="sentiment0Color">#3CD070</color> <!-- 행복 -->
+    <color name="sentiment1Color">#FFD700</color> <!-- 놀람 -->
+    <color name="sentiment2Color">#C0C0C0</color> <!-- 중립 -->
+    <color name="sentiment3Color">#4A90E2</color> <!-- 슬픔 -->
+    <color name="sentiment4Color">#7E57C2</color> <!-- 꺼림 -->
+    <color name="sentiment5Color">#E53935</color> <!-- 분노 -->
+    <color name="sentiment6Color">#FFA500</color> <!-- 두려움 -->
+    <color name="defaultColor">#9EFFFFFF</color> <!-- 기본 색상 -->
 </resources>

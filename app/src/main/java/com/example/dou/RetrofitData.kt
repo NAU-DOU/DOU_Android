@@ -1,6 +1,7 @@
 package com.example.dou
 
 import com.google.gson.annotations.SerializedName
+import org.checkerframework.checker.index.qual.SearchIndexFor
 import java.io.Serial
 
 data class SignupRequest(
@@ -287,4 +288,26 @@ data class ChatResult(
     val recordId: Int,
     @SerializedName("createdAt")
     val createdAt: String
+)
+
+data class RoomListResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: List<RoomListData>
+)
+
+data class RoomListData(
+    @SerializedName("room_id")
+    val room_id: Int,
+    @SerializedName("room_date")
+    val room_date: String,
+    @SerializedName("created_at")
+    val created_at: String,
+    @SerializedName("room_sent")
+    val room_sent: Int
 )

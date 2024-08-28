@@ -10,6 +10,9 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.FragmentCalendarBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -50,7 +53,7 @@ class CalendarFragment : Fragment() {
         // CalItem 객체들을 생성하여 리스트에 추가합니다.
         val calItems = ArrayList<CalItem>()
         for (i in 1..lastDayOfMonth) {
-            calItems.add(CalItem(i))
+            calItems.add(CalItem(i, null)) // 초기에는 sentiment를 null로 설정
         }
 
         // RecyclerView에 어댑터 설정
@@ -71,6 +74,35 @@ class CalendarFragment : Fragment() {
 
         binding.calRecycler.layoutManager = GridLayoutManager(context, 7)
         binding.calRecycler.adapter = calAdapter
+
+        // 각 날짜에 대한 room_sent 데이터를 가져오고 업데이트합니다.
+        for (i in 1..lastDayOfMonth) {
+            val calendar = Calendar.getInstance()
+            calendar.set(Calendar.YEAR, currentYear)
+            calendar.set(Calendar.MONTH, currentMonth)
+            calendar.set(Calendar.DAY_OF_MONTH, i)
+            val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+
+            // API 호출
+            RetrofitApi.getRetrofitService.getRoomDate(formattedDate).enqueue(object : Callback<RoomListResponse> {
+                override fun onResponse(call: Call<RoomListResponse>, response: Response<RoomListResponse>) {
+                    if (response.isSuccessful) {
+                        val roomList = response.body()?.data ?: emptyList()
+                        val roomSent = roomList.lastOrNull()?.room_sent
+
+                        // CalItem 리스트 업데이트
+                        calItems[i - 1] = CalItem(i, roomSent)
+                        calAdapter.notifyItemChanged(i - 1) // 어댑터에 변경된 아이템을 알림
+                    } else {
+                        Log.e("CalendarFragment", "API 호출 실패: ${response.code()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<RoomListResponse>, t: Throwable) {
+                    Log.e("CalendarFragment", "API 호출 실패", t)
+                }
+            })
+        }
 
         // BottomSheet 설정
         bottomSheetBehavior = BottomSheetBehavior.from(binding.emotionTitleLayout)
@@ -105,36 +137,9 @@ class CalendarFragment : Fragment() {
 
     // BottomSheet를 열기 위한 함수
     private fun openBottomSheet(formattedDate: String) {
-        // userId는 추후에 로그인 한 후에 설정해주면 될 듯
-        //val request = DateRequest(formattedDate)
-        //val service = RetrofitApi.getRetrofitService
-        //val call = service.recordDate(request)
+        // 여기서 API를 호출해서 해당 날짜의 대화 내용을 가져오고, BottomSheet에 표시할 수 있습니다.
 
-        /*call.enqueue(object : Callback<DateResponse> {
-            override fun onResponse(call: Call<DateResponse>, response: Response<DateResponse>) {
-                if (response.isSuccessful) {
-                    bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
-
-                    // 받은 데이터를 바탕으로 대화 리사이클러뷰 구성하면 될듯!
-                    // 0: 컴퓨터 isSentByMe = false, 1: 사용자 isSentByMe = true
-                    // 0이면 isSentByMe를 false로 설정한 후 item add 해주면 될 듯
-                    // val chatItem = ChatItem(message, isSentByMe = false)
-                    // chatItems.add(chatItem)
-
-                    val dateResponse = response.body()
-                    // 아마 for 문 돌면서 화면에 출력하는 방향으로?
-                } else {
-                    Log.e("날짜별 기록 조회 API", "API 호출 실패: ${response.code()}")
-                }
-            }
-
-            override fun onFailure(call: Call<DateResponse>, t: Throwable) {
-                Log.e("날짜별 기록 조회 API_에러", "API 호출 실패", t)
-            }
-        })
-        */
-
-        // api 요청했을 때 응답으로 돌아오는 값이 없는 경우는 대화가 없다는 의미여서 일단 이런 식으로 구현해두기
+        // 예시로 nonTalkLayout을 표시하는 코드
         binding.nonTalkLayout.visibility = View.VISIBLE
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
     }
