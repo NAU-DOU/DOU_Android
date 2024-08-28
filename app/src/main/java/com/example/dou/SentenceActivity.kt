@@ -8,6 +8,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivitySentenceBinding
+import com.google.gson.Gson
 import model.Message
 import retrofit2.Call
 import retrofit2.Callback
@@ -426,21 +427,66 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun logAllConversations() {
-        conversationHistoryMap.forEach { (position, chatItems) ->
-            val conversationData = StringBuilder()
-            conversationData.append("대화 $position - 시작\n")
+        val roomId = intent.getIntExtra("roomId", -1)
+        val chatRequestList = mutableListOf<ChatRequest>()
 
-            chatItems.forEach { chatItem ->
-                val sender = if (chatItem.isSentByMe) "User" else "GPT"
-                conversationData.append("$sender: ${chatItem.message}\n")
+        // 각 문장과 해당 문장에 대한 감정 분석 결과를 연결
+        conversationHistoryMap.forEach { (position, chatItems) ->
+            chatItems.forEachIndexed { index, chatItem ->
+                // 감정 분석 결과에서 sentiment 값을 가져오기
+                val sentiment = if (index < emotionDataList.size) {
+                    emotionDataList[index].sentiment
+                } else {
+                    1 // 기본값으로 1을 설정 (원하는 기본값으로 설정 가능)
+                }
+
+                // 각 메시지를 ChatRequest 객체로 변환
+                val chatRequest = ChatRequest(
+                    userId = 1, // 실제 사용자의 ID로 변경 필요
+                    roomId = roomId, // Intent에서 가져온 roomId 사용
+                    recordId = position + 1, // position 값을 recordId로 사용
+                    isUser = if (chatItem.isSentByMe) 1 else 0,
+                    chatContent = chatItem.message,
+                    chatSent = sentiment // 감정 분석 결과에 따라 chatSent 설정
+                )
+
+                // 리스트에 추가
+                chatRequestList.add(chatRequest)
+            }
+        }
+
+        // 전체 대화 내용을 한 번의 API 요청으로 서버에 전송
+        sendChatRequests(chatRequestList)
+
+        // JSON 형식으로 변환하여 로그 출력
+        val gson = Gson()
+        val json = gson.toJson(chatRequestList)
+        Log.d("ChatRequest", json)
+    }
+
+    private fun sendChatRequests(chatRequestList: List<ChatRequest>) {
+        val service = RetrofitApi.getRetrofitService
+        val call = service.chatPost(chatRequestList)
+
+        call.enqueue(object : Callback<ChatResponse> {
+            override fun onResponse(call: Call<ChatResponse>, response: Response<ChatResponse>) {
+                if (response.isSuccessful) {
+                    val chatResponses = response.body()
+                    Log.d("ChatPost", "채팅 저장 성공: $chatResponses")
+                    // 성공 처리 로직 추가
+                } else {
+                    Log.e("ChatPost", "채팅 저장 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    // 실패 처리 로직 추가
+                }
             }
 
-            conversationData.append("대화 $position - 종료\n")
-
-            // 로그로 출력
-            Log.d("ConversationData_Tab_$position", conversationData.toString())
-        }
+            override fun onFailure(call: Call<ChatResponse>, t: Throwable) {
+                Log.e("ChatPost", "채팅 저장 요청 실패", t)
+                // 네트워크 오류 등 요청 실패 시 처리 로직 추가
+            }
+        })
     }
+
 
     private fun determineReqType(sentiment: Int): String {
         return when (sentiment) {

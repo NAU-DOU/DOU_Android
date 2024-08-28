@@ -50,4 +50,7 @@ interface RetrofitService {
 
     @PATCH("/room")
     fun roomPatch(@Body request: RoomSentPatchRequest) : Call<RoomAddRespose>
+
+    @POST("/chat")
+    fun chatPost(@Body request: List<ChatRequest>) : Call<ChatResponse>
 }

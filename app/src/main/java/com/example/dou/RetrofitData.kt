@@ -253,3 +253,38 @@ data class RoomSentPatchRequest(
     @SerializedName("roomSent")
     val roomSent: Int
 )
+
+data class ChatRequest(
+    @SerializedName("userId")
+    val userId: Int,
+    @SerializedName("roomId")
+    val roomId: Int,
+    @SerializedName("recordId")
+    val recordId: Int,
+    @SerializedName("isUser")
+    val isUser: Int,
+    @SerializedName("chatContent")
+    val chatContent: String,
+    @SerializedName("chatSent")
+    val chatSent: Int
+)
+
+data class ChatResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: List<ChatResult>
+)
+
+data class ChatResult(
+    @SerializedName("chatId")
+    val chatId: Int,
+    @SerializedName("recordId")
+    val recordId: Int,
+    @SerializedName("createdAt")
+    val createdAt: String
+)
