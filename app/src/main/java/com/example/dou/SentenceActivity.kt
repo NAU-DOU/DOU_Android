@@ -99,7 +99,7 @@ class SentenceActivity : AppCompatActivity() {
     // Swagger에서 gpt summary부분 이용하기
     private fun summaryChat(context: String, roomId: Int){
         // SummaryRequest 생성
-        val request = SummaryRequest(userId = 0, context = context)
+        val request = SummaryRequest(userId = 1, context = context)
         Log.d("SummaryRequest", "Request: $request")
 
         // Retrofit 서비스 인터페이스 호출
@@ -183,7 +183,7 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun analyzeEmotion(sentence: String, roomId: Int) {
-        val request = EmotionRequest(userId = 0, sentence = sentence)
+        val request = EmotionRequest(userId = 1, sentence = sentence)
         Log.d("EmotionRequest", "Request: $request")
         val service = RetrofitApi.getRetrofitService
         val call = service.emotion(request)

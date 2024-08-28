@@ -219,7 +219,7 @@ class EmotionActivity : AppCompatActivity() {
     }
 
     private fun addRoom(onRoomCreated: (Int) -> Unit) {
-        val request = RoomAddRequest(roomUserId = 0, roomSent = 1)
+        val request = RoomAddRequest(roomUserId = 1, roomSent = 1)
 
         val service = RetrofitApi.getRetrofitService
         val call = service.roomAdd(request)
