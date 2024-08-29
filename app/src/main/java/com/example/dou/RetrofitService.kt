@@ -29,6 +29,8 @@ interface RetrofitService {
     // 기록 등록(저장)API
 //    @POST("/record/register")
 //    fun recordSave(@Body request: EmotionRequest): Call<RecordResponse>
+    @PATCH("/record")
+    fun recordPatch(@Body request: RecordPatchRequest) : Call<RecordPatchResponse>
 
     // 기록 상세 조회
     @GET("/record/{identifyId}")

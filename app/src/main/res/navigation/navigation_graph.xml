@@ -34,6 +34,9 @@
         <action
             android:id="@+id/action_listFragment_to_chatActivity"
             app:destination="@id/chatActivity" />
+        <action
+            android:id="@+id/action_listFragment_to_recordFragment"
+            app:destination="@id/recordFragment" />
     </fragment>
     <fragment
         android:id="@+id/userFragment"
@@ -62,5 +65,10 @@
         android:name="com.example.dou.ChatActivity"
         android:label="activity_chat"
         tools:layout="@layout/activity_chat" />
+    <fragment
+        android:id="@+id/recordFragment"
+        android:name="com.example.dou.RecordFragment"
+        android:label="fragment_record"
+        tools:layout="@layout/fragment_record" />
 
 </navigation>

@@ -15,9 +15,7 @@ import retrofit2.Callback
 import retrofit2.Response
 
 /*
-TODO 1) API 요청 실패한 경우에 다시 요청할 수 있도록 해야 함 => 현재는 한번 요청한 경우 다시 요청할 수 없도록 막혀 있음
-     2) API 요청이 성공하여도 화면에 뜨기 전에 다른 탭으로 이동하면 다른 탭에서 이전 요청 내용이 작성되는 문제가 발생함 '
-     => 작성이 완료될 때 까지 다른 탭으로 넘어가지 못하도록 해야 할 듯
+TODO 1) roomid 만든 후에 record Position 별로 summary와 같은 내용 전달해야 함
 */
 
 class SentenceActivity : AppCompatActivity() {
@@ -521,13 +519,18 @@ class SentenceActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         logAllConversations() // 액티비티 종료 시 대화 내용 로그로 출력
+
+        // logAllConversations 후에 roomPatchSentiment 및 recordPatch 실행
+        logAllConversationsAndPatch()
     }
 
     override fun onPause() {
         super.onPause()
         logAllConversations() // 액티비티 일시 중지 시 대화 내용 로그로 출력
-    }
 
+        // logAllConversations 후에 roomPatchSentiment 및 recordPatch 실행
+        logAllConversationsAndPatch()
+    }
     // room을 생성하고자 할 때 사용하는 코드
     private fun roomPatchSentiment(roomId: Int, roomSent: Int){
         val request = RoomSentPatchRequest(
@@ -558,6 +561,79 @@ class SentenceActivity : AppCompatActivity() {
             override fun onFailure(call: Call<RoomAddRespose>, t: Throwable) {
                 // 네트워크 요청이 실패한 경우 (예: 네트워크 오류)
                 Log.e("RoomPatch", "Patch 요청 실패", t)
+            }
+        })
+    }
+
+    private fun logAllConversationsAndPatch() {
+        logAllConversations()
+
+        val roomId = intent.getIntExtra("roomId", -1)
+        val finalSentiment = emotionDataList.lastOrNull()?.sentiment ?: 0
+
+        // RoomSentiment를 Patch
+        roomPatchSentiment(roomId, finalSentiment) {
+            // RoomSentiment Patch가 성공적으로 완료된 후 recordPatch 실행
+            emotionDataList.forEachIndexed { index, emotionResult ->
+                patchRecord(index + 1, emotionResult.sentiment, emotionResult.sentence)
+            }
+        }
+    }
+
+    private fun roomPatchSentiment(roomId: Int, roomSent: Int, onSuccess: () -> Unit) {
+        val request = RoomSentPatchRequest(
+            roomId = roomId,
+            roomSent = roomSent
+        )
+
+        val service = RetrofitApi.getRetrofitService
+        val call = service.roomPatch(request)
+
+        call.enqueue(object : Callback<RoomAddRespose> {
+            override fun onResponse(
+                call: Call<RoomAddRespose>,
+                response: Response<RoomAddRespose>
+            ) {
+                if (response.isSuccessful) {
+                    val patchResponse = response.body()
+                    Log.d("RoomPatch", "Patch 성공: $patchResponse")
+                    onSuccess() // 성공 시, recordPatch를 호출
+                } else {
+                    Log.e("RoomPatch", "Patch 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<RoomAddRespose>, t: Throwable) {
+                Log.e("RoomPatch", "Patch 요청 실패", t)
+            }
+        })
+    }
+
+    private fun patchRecord(recordId: Int, sentiment: Int, sentence: String) {
+        val patchRequest = RecordPatchRequest(
+            recordId = recordId,
+            recordSent = sentiment,
+            recordSummary = sentence
+        )
+
+        val service = RetrofitApi.getRetrofitService
+        val call = service.recordPatch(patchRequest)
+
+        call.enqueue(object : Callback<RecordPatchResponse> {
+            override fun onResponse(
+                call: Call<RecordPatchResponse>,
+                response: Response<RecordPatchResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val patchResponse = response.body()
+                    Log.d("RecordPatch", "Patch 성공: ${patchResponse?.data}")
+                } else {
+                    Log.e("RecordPatch", "Patch 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<RecordPatchResponse>, t: Throwable) {
+                Log.e("RecordPatch", "Patch 호출 실패", t)
             }
         })
     }

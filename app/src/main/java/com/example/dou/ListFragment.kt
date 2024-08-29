@@ -38,7 +38,8 @@ class ListFragment : Fragment() {
 
         binding.talkBtn.setOnClickListener {
             val navController = findNavController()
-            navController.navigate(R.id.action_listFragment_to_homeFragment)
+            //navController.navigate(R.id.action_listFragment_to_homeFragment)
+            //navController.navigate(R.id.action_listFragment_to_recordFragment)
         }
 
         return binding.root

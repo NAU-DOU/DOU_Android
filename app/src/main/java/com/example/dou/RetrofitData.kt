@@ -311,3 +311,34 @@ data class RoomListData(
     @SerializedName("room_sent")
     val room_sent: Int
 )
+
+data class RecordPatchRequest(
+    @SerializedName("recordId")
+    val recordId: Int,
+    @SerializedName("recordSent")
+    val recordSent: Int,
+    @SerializedName("recordSummary")
+    val recordSummary: String,
+)
+
+data class RecordPatchResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: RecordPatchData
+)
+
+data class RecordPatchData(
+    @SerializedName("recordId")
+    val recordId: Int,
+    @SerializedName("recordSent")
+    val recordSent: Int,
+    @SerializedName("recordSummary")
+    val recordSummary: String,
+    @SerializedName("createdAt")
+    val createdAt: String
+)
