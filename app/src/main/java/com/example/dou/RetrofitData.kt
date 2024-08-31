@@ -342,3 +342,32 @@ data class RecordPatchData(
     @SerializedName("createdAt")
     val createdAt: String
 )
+
+data class RecordPostRequest(
+    @SerializedName("roomId")
+    val roomId: Int
+)
+
+data class RecordPostResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: RecordPostData
+)
+
+data class RecordPostData(
+    @SerializedName("recordId")
+    val recordId: Int,
+    @SerializedName("roomId")
+    val roomId: Int,
+    @SerializedName("recordSent")
+    val recordSent: Int,
+    @SerializedName("recordSummary")
+    val recordSummary: String,
+    @SerializedName("createdAt")
+    val createdAt: String
+)

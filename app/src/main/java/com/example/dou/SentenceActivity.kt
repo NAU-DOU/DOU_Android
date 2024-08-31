@@ -230,6 +230,11 @@ class SentenceActivity : AppCompatActivity() {
                             conversationHistoryMap[0] = mutableListOf() // 첫 번째 대화에 대해 초기화
                         }
 
+                        // RecordPost를 각 emotionDataList에 대해 실행
+                        for (emotionResult in emotionDataList) {
+                            postRecordForEmotion(roomId, emotionResult)
+                        }
+
                         // TODO => patch를 시도하도록 해야됨 왜냐면 마지막 summary에 대한 총 sentiment를 진행해야하기 때문
                         // 마지막 감정 분석 결과를 바탕으로 roomSent를 계산하고, Patch 요청
                         val finalSentiment = emotionDataList.lastOrNull()?.sentiment ?: 0
@@ -634,6 +639,36 @@ class SentenceActivity : AppCompatActivity() {
 
             override fun onFailure(call: Call<RecordPatchResponse>, t: Throwable) {
                 Log.e("RecordPatch", "Patch 호출 실패", t)
+            }
+        })
+    }
+
+    private fun postRecordForEmotion(roomId: Int, emotionResult: EmotionResult) {
+        val roomId = intent.getIntExtra("roomId",-1)
+        val request = RecordPostRequest(
+            roomId = roomId
+        )
+
+        val service = RetrofitApi.getRetrofitService
+        val call = service.recordPost(request)
+
+        call.enqueue(object : Callback<RecordPostResponse> {
+            override fun onResponse(call: Call<RecordPostResponse>, response: Response<RecordPostResponse>) {
+                if (response.isSuccessful) {
+                    val recordResponse = response.body()
+                    recordResponse?.let {
+                        Log.d("RecordPost", "Record 생성 성공: ${it.data}")
+
+                        // 생성된 recordId로 recordPatch를 통해 sentiment와 summary를 설정
+                        //patchRecord(it.data.recordId, emotionResult.sentiment, emotionResult.sentence)
+                    }
+                } else {
+                    Log.e("RecordPost", "Record 생성 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<RecordPostResponse>, t: Throwable) {
+                Log.e("RecordPost", "Record 생성 실패", t)
             }
         })
     }

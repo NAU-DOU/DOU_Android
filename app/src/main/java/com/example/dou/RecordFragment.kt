@@ -24,6 +24,12 @@ class RecordFragment : Fragment() {
         // Inflate the layout for this fragment
         binding = FragmentRecord2Binding.inflate(inflater, container, false)
 
+        // ViewPager2 설정
+        val viewPagerAdapter = ViewPagerAdapter(this)
+        binding.viewPager.adapter = viewPagerAdapter
+
+        // DotsIndicator와 ViewPager2를 연결
+        binding.dotsIndicator.attachTo(binding.viewPager)
 
         return binding.root
     }

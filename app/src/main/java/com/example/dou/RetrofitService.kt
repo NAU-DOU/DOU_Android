@@ -32,6 +32,9 @@ interface RetrofitService {
     @PATCH("/record")
     fun recordPatch(@Body request: RecordPatchRequest) : Call<RecordPatchResponse>
 
+    @POST("/record")
+    fun recordPost(@Body request: RecordPostRequest) : Call<RecordPostResponse>
+
     // 기록 상세 조회
     @GET("/record/{identifyId}")
     fun recordCheck(@Path("identifyId") identifyId: Int?) : Call<RecordCheckResponse>

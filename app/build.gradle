@@ -107,5 +107,5 @@ dependencies {
 
     // 뷰페이저 인디케이터 사용
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
-    implementation 'com.github.tommybuonomo:dotsindicator:3.0.3'
+    implementation 'com.tbuonomo:dotsindicator:5.0'
 }
