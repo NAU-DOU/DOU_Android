@@ -1,5 +1,7 @@
 package com.example.dou
 
+import android.os.Parcel
+import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import org.checkerframework.checker.index.qual.SearchIndexFor
 import java.io.Serial
@@ -264,8 +266,8 @@ data class ChatRequest(
     val recordId: Int,
     @SerializedName("isUser")
     val isUser: Int,
-    @SerializedName("chatContent")
-    val chatContent: String,
+    @SerializedName("chatContext")
+    val chatContext: String,
     @SerializedName("chatSent")
     val chatSent: Int
 )
@@ -288,6 +290,34 @@ data class ChatResult(
     val recordId: Int,
     @SerializedName("createdAt")
     val createdAt: String
+)
+
+data class ChatGetResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: List<ChatGetData>,
+    @SerializedName("paging")
+    val paging: Int
+)
+
+data class ChatGetData(
+    @SerializedName("chatId")
+    val chatId: Int,
+    @SerializedName("recordId")
+    val recordId: Int,
+    @SerializedName("isUser")
+    val isUser: Int,
+    @SerializedName("createdAt")
+    val createdAt: String,
+    @SerializedName("chatSent")
+    val chatSent: Int,
+    @SerializedName("chatContext")
+    val chatContext: String,
 )
 
 data class RoomListResponse(
@@ -371,3 +401,49 @@ data class RecordPostData(
     @SerializedName("createdAt")
     val createdAt: String
 )
+
+data class RecordGetResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: List<RecordGetData> // 리스트로 변경
+)
+
+data class RecordGetData(
+    val rec_id: Int,
+    val rec_sent: Int,
+    val rec_summary: String,
+    val created_at: String
+) : Parcelable {
+    constructor(parcel: Parcel) : this(
+        parcel.readInt(),
+        parcel.readInt(),
+        parcel.readString() ?: "",
+        parcel.readString() ?: ""
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeInt(rec_id)
+        parcel.writeInt(rec_sent)
+        parcel.writeString(rec_summary)
+        parcel.writeString(created_at)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<RecordGetData> {
+        override fun createFromParcel(parcel: Parcel): RecordGetData {
+            return RecordGetData(parcel)
+        }
+
+        override fun newArray(size: Int): Array<RecordGetData?> {
+            return arrayOfNulls(size)
+        }
+    }
+}

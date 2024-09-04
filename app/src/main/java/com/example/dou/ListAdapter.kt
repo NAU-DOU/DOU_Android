@@ -6,8 +6,10 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ListAdapter (private val listItems: ArrayList<ListItem>) :
-    RecyclerView.Adapter<ListAdapter.ListViewHolder>(){
+class ListAdapter(
+    private val listItems: ArrayList<ListItem>,
+    private val onItemClicked: (Int) -> Unit  // 클릭 시 roomId 전달하는 람다
+) : RecyclerView.Adapter<ListAdapter.ListViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ListAdapter.ListViewHolder {
         val itemView = LayoutInflater.from(parent.context)
@@ -18,6 +20,11 @@ class ListAdapter (private val listItems: ArrayList<ListItem>) :
     override fun onBindViewHolder(holder: ListAdapter.ListViewHolder, position: Int) {
         val item = listItems[position]
         holder.bind(item)
+
+        // 아이템 클릭 시 roomId 전달
+        holder.itemView.setOnClickListener {
+            onItemClicked(item.roomId)
+        }
     }
 
     override fun getItemCount(): Int {

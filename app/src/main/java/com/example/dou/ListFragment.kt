@@ -16,12 +16,7 @@ import retrofit2.Response
 class ListFragment : Fragment() {
     private lateinit var binding: FragmentListBinding
     private val listItem = arrayListOf<ListItem>()
-    private val listAdapter = ListAdapter(listItem)
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-    }
+    private lateinit var listAdapter: ListAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -29,22 +24,35 @@ class ListFragment : Fragment() {
     ): View? {
         binding = FragmentListBinding.inflate(inflater, container, false)
 
-        // 리사이클러뷰 설정
-        binding.listRecycler.layoutManager = LinearLayoutManager(context)
-        binding.listRecycler.adapter = listAdapter
+        // 리사이클러뷰 및 어댑터 설정
+        setupRecyclerView()
 
         // 방 리스트 가져오기
         fetchRoomList()
 
         binding.talkBtn.setOnClickListener {
             val navController = findNavController()
-            //navController.navigate(R.id.action_listFragment_to_homeFragment)
-            navController.navigate(R.id.action_listFragment_to_recordFragment2)
+            navController.navigate(R.id.action_listFragment_to_homeFragment)
         }
 
         return binding.root
     }
 
+    // 리사이클러뷰와 어댑터 설정
+    private fun setupRecyclerView() {
+        listAdapter = ListAdapter(listItem) { roomId ->
+            // roomId를 RecordFragment로 전달
+            val bundle = Bundle().apply {
+                putInt("roomId", roomId)
+            }
+            findNavController().navigate(R.id.action_listFragment_to_recordFragment2, bundle)
+        }
+
+        binding.listRecycler.layoutManager = LinearLayoutManager(context)
+        binding.listRecycler.adapter = listAdapter
+    }
+
+    // 방 리스트를 서버에서 가져오기
     private fun fetchRoomList() {
         val service = RetrofitApi.getRetrofitService  // Retrofit 인스턴스 가져오기
         val call = service.getAllRooms()
@@ -67,15 +75,15 @@ class ListFragment : Fragment() {
         })
     }
 
+    // 리사이클러뷰 데이터 업데이트
     private fun updateRecyclerView(roomList: List<RoomListData>) {
         listItem.clear()  // 기존 데이터를 지우고
-        roomList.forEach { room ->
-            // room_date에서 날짜 부분만 추출
-            val datePart = room.room_date.substring(0, 10) // "2024-08-29" 형태로 추출
-
+        roomList.reversed().forEach { room ->
+            // room_id를 사용하여 ListItem 생성
             val newListItem = ListItem(
+                roomId = room.room_id,         // room_id를 roomId로 사용
                 listCnt = "#${room.room_id}",
-                listTxt = "$datePart"
+                listTxt = room.room_date.substring(0, 10)  // 날짜만 추출
             )
             listItem.add(newListItem)
         }

@@ -35,6 +35,9 @@ interface RetrofitService {
     @POST("/record")
     fun recordPost(@Body request: RecordPostRequest) : Call<RecordPostResponse>
 
+    @GET("/record/room")
+    fun getRecordsByRoomId(@Query("roomId") roomId: Int): Call<RecordGetResponse>
+
     // 기록 상세 조회
     @GET("/record/{identifyId}")
     fun recordCheck(@Path("identifyId") identifyId: Int?) : Call<RecordCheckResponse>
@@ -42,6 +45,13 @@ interface RetrofitService {
     // 날짜별 기록 조회
     @GET("record/date")
     fun recordDate(@Query("date") date: DateRequest): Call<DateResponse>
+
+    @GET("/chat")
+    fun getChat(
+        @Query("recordId") recordId: Int,
+        @Query("paging") paging: Int,
+        @Query("limit") limit: Int
+    ): Call<ChatGetResponse>
 
     // GPT 이용 Summary
     @POST("/gpt/summary")

@@ -33,6 +33,9 @@ class SentenceActivity : AppCompatActivity() {
     private var waitingForPositiveResponse: Boolean = false
     private var isApiRequestInProgress: Boolean = false
 
+    private val recordIdMap = mutableMapOf<Int, Int>() // 각 대화 항목에 대한 recordId를 저장
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -231,8 +234,8 @@ class SentenceActivity : AppCompatActivity() {
                         }
 
                         // RecordPost를 각 emotionDataList에 대해 실행
-                        for (emotionResult in emotionDataList) {
-                            postRecordForEmotion(roomId, emotionResult)
+                        emotionDataList.forEachIndexed { index, emotionResult ->
+                            postRecordForEmotion(roomId, emotionResult, index) // index를 position으로 전달
                         }
 
                         // TODO => patch를 시도하도록 해야됨 왜냐면 마지막 summary에 대한 총 sentiment를 진행해야하기 때문
@@ -433,7 +436,6 @@ class SentenceActivity : AppCompatActivity() {
         val roomId = intent.getIntExtra("roomId", -1)
         val chatRequestList = mutableListOf<ChatRequest>()
 
-        // 각 문장과 해당 문장에 대한 감정 분석 결과를 연결
         conversationHistoryMap.forEach { (position, chatItems) ->
             chatItems.forEachIndexed { index, chatItem ->
                 // 감정 분석 결과에서 sentiment 값을 가져오기
@@ -443,13 +445,16 @@ class SentenceActivity : AppCompatActivity() {
                     1 // 기본값으로 1을 설정 (원하는 기본값으로 설정 가능)
                 }
 
+                // position에 대응하는 recordId를 가져옴
+                val recordId = recordIdMap[position] ?: (position + 1) // recordIdMap에서 가져오거나 기본값으로 position + 1 사용
+
                 // 각 메시지를 ChatRequest 객체로 변환
                 val chatRequest = ChatRequest(
                     userId = 1, // 실제 사용자의 ID로 변경 필요
                     roomId = roomId, // Intent에서 가져온 roomId 사용
-                    recordId = position + 1, // position 값을 recordId로 사용
+                    recordId = recordId, // position이 아닌 생성된 recordId 사용
                     isUser = if (chatItem.isSentByMe) 1 else 0,
-                    chatContent = chatItem.message,
+                    chatContext = chatItem.message,
                     chatSent = sentiment // 감정 분석 결과에 따라 chatSent 설정
                 )
 
@@ -523,7 +528,7 @@ class SentenceActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        logAllConversations() // 액티비티 종료 시 대화 내용 로그로 출력
+        //logAllConversations() // 액티비티 종료 시 대화 내용 로그로 출력
 
         // logAllConversations 후에 roomPatchSentiment 및 recordPatch 실행
         logAllConversationsAndPatch()
@@ -531,10 +536,10 @@ class SentenceActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
-        logAllConversations() // 액티비티 일시 중지 시 대화 내용 로그로 출력
+        //logAllConversations() // 액티비티 일시 중지 시 대화 내용 로그로 출력
 
         // logAllConversations 후에 roomPatchSentiment 및 recordPatch 실행
-        logAllConversationsAndPatch()
+        //logAllConversationsAndPatch()
     }
     // room을 생성하고자 할 때 사용하는 코드
     private fun roomPatchSentiment(roomId: Int, roomSent: Int){
@@ -643,8 +648,7 @@ class SentenceActivity : AppCompatActivity() {
         })
     }
 
-    private fun postRecordForEmotion(roomId: Int, emotionResult: EmotionResult) {
-        val roomId = intent.getIntExtra("roomId",-1)
+    private fun postRecordForEmotion(roomId: Int, emotionResult: EmotionResult, position: Int) {
         val request = RecordPostRequest(
             roomId = roomId
         )
@@ -659,8 +663,11 @@ class SentenceActivity : AppCompatActivity() {
                     recordResponse?.let {
                         Log.d("RecordPost", "Record 생성 성공: ${it.data}")
 
+                        // 생성된 recordId를 recordIdMap에 저장
+                        recordIdMap[position] = it.data.recordId
+
                         // 생성된 recordId로 recordPatch를 통해 sentiment와 summary를 설정
-                        //patchRecord(it.data.recordId, emotionResult.sentiment, emotionResult.sentence)
+                        patchRecord(it.data.recordId, emotionResult.sentiment, emotionResult.sentence)
                     }
                 } else {
                     Log.e("RecordPost", "Record 생성 실패: ${response.code()} - ${response.errorBody()?.string()}")

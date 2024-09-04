@@ -4,14 +4,14 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:paddingLeft="20dp"
-    android:paddingRight="20dp"
     android:paddingBottom="0dp"
-    android:paddingTop="20dp"
     tools:context=".FirstFragment">
 
 
     <TextView
+        android:paddingLeft="20dp"
+        android:paddingRight="20dp"
+        android:paddingTop="20dp"
         android:id="@+id/tv_record_sum"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -28,14 +28,18 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/chatRecycler2"
+        android:layout_marginRight="10dp"
+        android:layout_marginLeft="10dp"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="1"
         android:nestedScrollingEnabled="false"
         android:overScrollMode="never"
         android:paddingTop="8dp"
+        android:layout_marginBottom="10dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_record_sum"/>
+        app:layout_constraintTop_toBottomOf="@id/tv_record_sum" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
