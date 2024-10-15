@@ -238,16 +238,16 @@ data class RoomAddRespose(
 )
 
 data class RoomAddResult(
-    @SerializedName("user_id")
-    val user_id: Int,
-    @SerializedName("room_sent")
-    val room_sent: Int,
-    @SerializedName("room_date")
-    val room_date: String,
-    @SerializedName("created_at")
-    val created_at: String,
-    @SerializedName("room_id")
-    val room_id: Int
+    @SerializedName("userId")
+    val userId: Int,
+    @SerializedName("roomSent")
+    val roomSent: Int,
+    @SerializedName("roomDate")
+    val roomDate: String,
+    @SerializedName("updatedAt")
+    val createdAt: String,
+    @SerializedName("roomId")
+    val roomId: Int
 )
 
 data class RoomSentPatchRequest(
@@ -301,8 +301,8 @@ data class ChatGetResponse(
     val message: String,
     @SerializedName("data")
     val data: List<ChatGetData>,
-    @SerializedName("paging")
-    val paging: Int
+    @SerializedName("cursorId")
+    val cursorId: Int
 )
 
 data class ChatGetData(
@@ -328,18 +328,20 @@ data class RoomListResponse(
     @SerializedName("message")
     val message: String,
     @SerializedName("data")
-    val data: List<RoomListData>
+    val data: List<RoomListData>,
+    @SerializedName("cursorId")
+    val cursorId: Int
 )
 
 data class RoomListData(
-    @SerializedName("room_id")
-    val room_id: Int,
-    @SerializedName("room_date")
-    val room_date: String,
-    @SerializedName("created_at")
-    val created_at: String,
-    @SerializedName("room_sent")
-    val room_sent: Int
+    @SerializedName("roomId")
+    val roomId: Int,
+    @SerializedName("roomDate")
+    val roomDate: String,
+    @SerializedName("roomUserId")
+    val roomUserId: Int,
+    @SerializedName("roomSent")
+    val roomSent: Int
 )
 
 data class RecordPatchRequest(
@@ -410,27 +412,32 @@ data class RecordGetResponse(
     @SerializedName("message")
     val message: String,
     @SerializedName("data")
-    val data: List<RecordGetData> // 리스트로 변경
+    val data: List<RecordGetData>, // 리스트로 변경
+    @SerializedName("cursorId")
+    val cursorId: Int,
 )
 
 data class RecordGetData(
-    val rec_id: Int,
-    val rec_sent: Int,
-    val rec_summary: String,
-    val created_at: String
+    val recordId: Int,
+    val roomId: Int,
+    val createdAt: String,
+    val recordSummary: String,
+    val recordSent: Int,
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readInt(),
         parcel.readInt(),
         parcel.readString() ?: "",
-        parcel.readString() ?: ""
+        parcel.readString() ?: "",
+        parcel.readInt()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
-        parcel.writeInt(rec_id)
-        parcel.writeInt(rec_sent)
-        parcel.writeString(rec_summary)
-        parcel.writeString(created_at)
+        parcel.writeInt(recordId)
+        parcel.writeInt(roomId)
+        parcel.writeInt(recordSent)
+        parcel.writeString(recordSummary)
+        parcel.writeString(createdAt)
     }
 
     override fun describeContents(): Int {

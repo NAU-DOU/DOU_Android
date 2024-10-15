@@ -378,7 +378,7 @@ class SentenceActivity : AppCompatActivity() {
             val reqSent = determineReqSent(data.sentiment)
 
             val request = GPTRequest(
-                userId = 0,
+                userId = 2,
                 context = data.sentence,
                 reqType = reqType,
                 reqSent = reqSent
@@ -450,7 +450,7 @@ class SentenceActivity : AppCompatActivity() {
 
                 // 각 메시지를 ChatRequest 객체로 변환
                 val chatRequest = ChatRequest(
-                    userId = 1, // 실제 사용자의 ID로 변경 필요
+                    userId = 2, // 실제 사용자의 ID로 변경 필요
                     roomId = roomId, // Intent에서 가져온 roomId 사용
                     recordId = recordId, // position이 아닌 생성된 recordId 사용
                     isUser = if (chatItem.isSentByMe) 1 else 0,
@@ -471,6 +471,7 @@ class SentenceActivity : AppCompatActivity() {
         val json = gson.toJson(chatRequestList)
         Log.d("ChatRequest", json)
     }
+
 
     private fun sendChatRequests(chatRequestList: List<ChatRequest>) {
         val service = RetrofitApi.getRetrofitService
@@ -542,6 +543,7 @@ class SentenceActivity : AppCompatActivity() {
         //logAllConversationsAndPatch()
     }
     // room을 생성하고자 할 때 사용하는 코드
+    // TODO: room 생성은했는데, 이제 patch가 안되는 문제가 발생함요
     private fun roomPatchSentiment(roomId: Int, roomSent: Int){
         val request = RoomSentPatchRequest(
             roomId = roomId,

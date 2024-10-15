@@ -41,7 +41,8 @@ class RecordFragment : Fragment() {
 
     private fun fetchRecordsByRoomId(roomId: Int) {
         val service = RetrofitApi.getRetrofitService
-        val call = service.getRecordsByRoomId(roomId)
+        val call = service.getRecordsByRoomId(
+            roomId, cursorId = 0, limit = 10)
 
         call.enqueue(object : Callback<RecordGetResponse> {
             override fun onResponse(call: Call<RecordGetResponse>, response: Response<RecordGetResponse>) {

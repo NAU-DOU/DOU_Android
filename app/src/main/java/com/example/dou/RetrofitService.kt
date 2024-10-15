@@ -36,7 +36,11 @@ interface RetrofitService {
     fun recordPost(@Body request: RecordPostRequest) : Call<RecordPostResponse>
 
     @GET("/record/room")
-    fun getRecordsByRoomId(@Query("roomId") roomId: Int): Call<RecordGetResponse>
+    fun getRecordsByRoomId(
+        @Query("roomId") roomId: Int,
+        @Query("cursorId") cursorId: Int,
+        @Query("limit") limit: Int,
+    ): Call<RecordGetResponse>
 
     // 기록 상세 조회
     @GET("/record/{identifyId}")
@@ -49,7 +53,7 @@ interface RetrofitService {
     @GET("/chat")
     fun getChat(
         @Query("recordId") recordId: Int,
-        @Query("paging") paging: Int,
+        @Query("cursorId") cursorId: Int,
         @Query("limit") limit: Int
     ): Call<ChatGetResponse>
 
@@ -69,9 +73,15 @@ interface RetrofitService {
     @POST("/chat")
     fun chatPost(@Body request: List<ChatRequest>) : Call<ChatResponse>
 
-    @GET("/room/test")
-    fun getAllRooms() :Call<RoomListResponse>
+    @GET("/room")
+    fun getAllRooms(
+        @Query("cursorId") cursorId: Int,
+        @Query("limit") limit: Int) :Call<RoomListResponse>
 
     @GET("/room/date")
-    fun getRoomDate(@Query("date") date: String): Call<RoomListResponse>
+    fun getRoomDate(
+        @Query("date") date: String,
+        @Query("cursorId") cursorId: Int,
+        @Query("limit") limit: Int)
+    : Call<RoomListResponse>
 }

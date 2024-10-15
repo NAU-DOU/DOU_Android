@@ -185,43 +185,144 @@ class HomeFragment : Fragment() {
         ).show()
     }
 
+//    private fun startRecording() {
+//        val fileName: String = "audio_${Date().time}.mp3"
+//        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+//        val outputFile = File(outputDir, fileName)
+//
+//        mediaRecorder = MediaRecorder()
+//        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
+//        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+//        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+//        mediaRecorder?.setOutputFile(outputFile.absolutePath)
+//
+//        try {
+//            mediaRecorder?.prepare()
+//            mediaRecorder?.start()
+//            state = true
+//            Toast.makeText(
+//                requireContext().applicationContext,
+//                "녹음을 시작했습니다.",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//            output = outputFile.absolutePath
+//        } catch (e: IllegalStateException) {
+//            e.printStackTrace()
+//            Toast.makeText(
+//                requireContext().applicationContext,
+//                "녹음 실패: ${e.message}",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//        } catch (e: IOException) {
+//            e.printStackTrace()
+//            Toast.makeText(
+//                requireContext().applicationContext,
+//                "녹음 실패: ${e.message}",
+//                Toast.LENGTH_SHORT
+//            ).show()
+//        }
+//    }
+
     private fun startRecording() {
         val fileName: String = "audio_${Date().time}.mp3"
-        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC)
+        val outputDir = requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC) // 앱 전용 디렉터리
         val outputFile = File(outputDir, fileName)
 
-        mediaRecorder = MediaRecorder()
-        mediaRecorder?.setAudioSource(MediaRecorder.AudioSource.MIC)
-        mediaRecorder?.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-        mediaRecorder?.setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-        mediaRecorder?.setOutputFile(outputFile.absolutePath)
+        mediaRecorder = MediaRecorder().apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setOutputFile(outputFile.absolutePath)
 
-        try {
-            mediaRecorder?.prepare()
-            mediaRecorder?.start()
-            state = true
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음을 시작했습니다.",
-                Toast.LENGTH_SHORT
-            ).show()
-            output = outputFile.absolutePath
-        } catch (e: IllegalStateException) {
-            e.printStackTrace()
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음 실패: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
-        } catch (e: IOException) {
-            e.printStackTrace()
-            Toast.makeText(
-                requireContext().applicationContext,
-                "녹음 실패: ${e.message}",
-                Toast.LENGTH_SHORT
-            ).show()
+            try {
+                prepare()
+                start()
+                state = true
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음을 시작했습니다.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                output = outputFile.absolutePath
+            } catch (e: IllegalStateException) {
+                e.printStackTrace()
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음 실패: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                Toast.makeText(
+                    requireContext().applicationContext,
+                    "녹음 실패: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
+
+    private fun createAudioFile() {
+        output?.let { filePath ->
+            val file = File(filePath)
+            if (file.exists()) {
+                // MediaStore에 파일 저장하기 위한 ContentValues 설정
+                val values = ContentValues().apply {
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, file.nameWithoutExtension + ".flac")
+                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/flac")
+                    // MediaStore에 파일을 Music 디렉토리에 저장
+                    put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
+                }
+
+                // MediaStore에 파일 저장
+                val resolver = requireContext().contentResolver
+                val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
+
+                uri?.let {
+                    try {
+                        // FFmpeg를 사용하여 mp3를 flac으로 변환
+                        val outputFile = File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC), file.nameWithoutExtension + ".flac")
+                        val command = "-i $filePath -c:a flac ${outputFile.absolutePath}"
+
+                        FFmpeg.executeAsync(command) { executionId, returnCode ->
+                            if (returnCode == 0) {
+                                // 파일 변환 성공
+                                Log.d("CreateAudioFile", "File conversion succeeded.")
+                                createdFileUri = Uri.fromFile(outputFile)
+                                file.delete() // 원본 mp3 파일 삭제
+                                Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
+                                onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
+                            } else {
+                                // 변환 실패
+                                Log.e("CreateAudioFile", "File conversion failed with rc=$returnCode.")
+                                Toast.makeText(
+                                    requireContext().applicationContext,
+                                    "오디오 파일 변환 중 오류가 발생했습니다.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    } catch (e: IOException) {
+                        Log.e("CreateAudioFile", "Error converting file: ${e.message}")
+                        Toast.makeText(
+                            requireContext().applicationContext,
+                            "오디오 파일 변환 중 오류가 발생했습니다.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                } ?: run {
+                    Log.e("CreateAudioFile", "File insert into MediaStore failed.")
+                    Toast.makeText(
+                        requireContext().applicationContext,
+                        "MediaStore에 파일을 삽입하는데 실패했습니다.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
+        }
+    }
+
+
 
     private fun stopRecording() {
         if (state) {
@@ -239,51 +340,55 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private fun createAudioFile() {
-        output?.let { filePath ->
-            val file = File(filePath)
-            if (file.exists()) {
-                val values = ContentValues().apply {
-                    put(MediaStore.Audio.Media.DISPLAY_NAME, file.nameWithoutExtension + ".flac")
-                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/flac")
-                    put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
-                }
-
-                val resolver = requireContext().contentResolver
-                val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
-
-                try {
-                    val outputFile = File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC), file.nameWithoutExtension + ".flac")
-                    val command = "-i $filePath -c:a flac ${outputFile.absolutePath}"
-                    val rc = FFmpeg.execute(command)
-
-                    if (rc == 0) {
-                        Log.d("CreateAudioFile", "File conversion succeeded.")
-                        createdFileUri = Uri.fromFile(outputFile)
-                        file.delete()
-                        Log.d("CreateAudioFile", "Saved file path: ${outputFile.path}")
-                        Log.d("CreateAudioFile", "Saved file URI: $uri")
-                        Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
-                        onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
-                    } else {
-                        Log.e("CreateAudioFile", "File conversion failed with rc=$rc.")
-                        Toast.makeText(
-                            requireContext().applicationContext,
-                            "오디오 파일 변환 중 오류가 발생했습니다.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                } catch (e: IOException) {
-                    Log.e("CreateAudioFile", "Error converting file: ${e.message}")
-                    Toast.makeText(
-                        requireContext().applicationContext,
-                        "오디오 파일 변환 중 오류가 발생했습니다.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            }
-        }
-    }
+//    private fun createAudioFile() {
+//        output?.let { filePath ->
+//            val file = File(filePath)
+//            if (file.exists()) {
+//                val values = ContentValues().apply {
+//                    put(MediaStore.Audio.Media.DISPLAY_NAME, file.nameWithoutExtension + ".flac")
+//                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/flac")
+//                    put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
+//                }
+//
+//                val resolver = requireContext().contentResolver
+//                val uri = resolver.insert(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, values)
+//
+//                try {
+//                    val outputFile = File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC), file.nameWithoutExtension + ".flac")
+//                    val command = "-i $filePath -c:a flac ${outputFile.absolutePath}"
+//
+//                    // 비동기 작업으로 FFmpeg 실행
+//                    FFmpeg.executeAsync(command) { executionId, returnCode ->
+//                        if (returnCode == 0) {
+//                            // 성공적으로 변환된 경우
+//                            Log.d("CreateAudioFile", "File conversion succeeded.")
+//                            createdFileUri = Uri.fromFile(outputFile)
+//                            file.delete()
+//                            Log.d("CreateAudioFile", "Saved file path: ${outputFile.path}")
+//                            Log.d("CreateAudioFile", "Saved file URI: $uri")
+//                            Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
+//                            onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
+//                        } else {
+//                            // 변환 실패
+//                            Log.e("CreateAudioFile", "File conversion failed with rc=$returnCode.")
+//                            Toast.makeText(
+//                                requireContext().applicationContext,
+//                                "오디오 파일 변환 중 오류가 발생했습니다.",
+//                                Toast.LENGTH_SHORT
+//                            ).show()
+//                        }
+//                    }
+//                } catch (e: IOException) {
+//                    Log.e("CreateAudioFile", "Error converting file: ${e.message}")
+//                    Toast.makeText(
+//                        requireContext().applicationContext,
+//                        "오디오 파일 변환 중 오류가 발생했습니다.",
+//                        Toast.LENGTH_SHORT
+//                    ).show()
+//                }
+//            }
+//        }
+//    }
 
 //    private fun requestSttConversion(uri: Uri) {
 //        val retrofit = Retrofit.Builder()

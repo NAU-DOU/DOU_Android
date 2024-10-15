@@ -43,10 +43,10 @@ class FirstFragment : Fragment() {
         }
 
         // 데이터를 UI에 바인딩
-        binding.tvRecordSum.text = recordData.rec_summary
+        binding.tvRecordSum.text = recordData.recordSummary
 
         // rec_id로 채팅 데이터를 요청
-        fetchChatData(recordData.rec_id)
+        fetchChatData(recordData.recordId)
 
         return binding.root
     }
@@ -54,7 +54,7 @@ class FirstFragment : Fragment() {
     // 채팅 데이터를 서버에서 가져오기
     private fun fetchChatData(recordId: Int) {
         val service = RetrofitApi.getRetrofitService  // Retrofit 인스턴스 가져오기
-        val call = service.getChat(recordId, paging = 0, limit = 0)  // 채팅 API 요청 생성
+        val call = service.getChat(recordId, cursorId = 0, limit = 0)  // 채팅 API 요청 생성
 
         call.enqueue(object : Callback<ChatGetResponse> {
             override fun onResponse(call: Call<ChatGetResponse>, response: Response<ChatGetResponse>) {

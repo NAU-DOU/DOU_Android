@@ -52,12 +52,12 @@ class EmotionActivity : AppCompatActivity() {
         binding = ActivityEmotionBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
-        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                Toast.makeText(this@EmotionActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
-            }
-        })
+//        // 뒤로가기 버튼을 눌렀을 때 처리할 콜백 설정
+//        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+//            override fun handleOnBackPressed() {
+//                Toast.makeText(this@EmotionActivity, "뒤로가기를 할 수 없어", Toast.LENGTH_LONG).show()
+//            }
+//        })
 
         val progressBar = binding.spinKit
         val threeBounce = ThreeBounce()
@@ -219,7 +219,7 @@ class EmotionActivity : AppCompatActivity() {
     }
 
     private fun addRoom(onRoomCreated: (Int) -> Unit) {
-        val request = RoomAddRequest(roomUserId = 1, roomSent = 1)
+        val request = RoomAddRequest(roomUserId = 2, roomSent = 1)
 
         val service = RetrofitApi.getRetrofitService
         val call = service.roomAdd(request)
@@ -228,7 +228,7 @@ class EmotionActivity : AppCompatActivity() {
             override fun onResponse(call: Call<RoomAddRespose>, response: Response<RoomAddRespose>) {
                 if (response.isSuccessful) {
                     val roomAddResponse = response.body()
-                    val roomId = roomAddResponse?.data?.room_id
+                    val roomId = roomAddResponse?.data?.roomId
                     Log.d("roomAddResponse", "Response: $roomAddResponse")
                     Log.d("roomId", "RoomId Check: $roomId")
 

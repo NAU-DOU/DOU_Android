@@ -84,11 +84,11 @@ class CalendarFragment : Fragment() {
             val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
 
             // API 호출
-            RetrofitApi.getRetrofitService.getRoomDate(formattedDate).enqueue(object : Callback<RoomListResponse> {
+            RetrofitApi.getRetrofitService.getRoomDate(formattedDate, cursorId = 0, limit=10).enqueue(object : Callback<RoomListResponse> {
                 override fun onResponse(call: Call<RoomListResponse>, response: Response<RoomListResponse>) {
                     if (response.isSuccessful) {
                         val roomList = response.body()?.data ?: emptyList()
-                        val roomSent = roomList.lastOrNull()?.room_sent
+                        val roomSent = roomList.lastOrNull()?.roomSent
 
                         // CalItem 리스트 업데이트
                         calItems[i - 1] = CalItem(i, roomSent)

@@ -55,7 +55,10 @@ class ListFragment : Fragment() {
     // 방 리스트를 서버에서 가져오기
     private fun fetchRoomList() {
         val service = RetrofitApi.getRetrofitService  // Retrofit 인스턴스 가져오기
-        val call = service.getAllRooms()
+        val call = service.getAllRooms(
+            cursorId = 0,
+            limit = 10
+        )
 
         call.enqueue(object : Callback<RoomListResponse> {
             override fun onResponse(call: Call<RoomListResponse>, response: Response<RoomListResponse>) {
@@ -78,12 +81,13 @@ class ListFragment : Fragment() {
     // 리사이클러뷰 데이터 업데이트
     private fun updateRecyclerView(roomList: List<RoomListData>) {
         listItem.clear()  // 기존 데이터를 지우고
-        roomList.reversed().forEach { room ->
+        roomList.forEach { room ->
             // room_id를 사용하여 ListItem 생성
             val newListItem = ListItem(
-                roomId = room.room_id,         // room_id를 roomId로 사용
-                listCnt = "#${room.room_id}",
-                listTxt = room.room_date.substring(0, 10)  // 날짜만 추출
+                roomId = room.roomId,         // room_id를 roomId로 사용
+                listCnt = "#${room.roomId}",
+                listTxt = room.roomDate
+            //.substring(0, 10)  // 날짜만 추출
             )
             listItem.add(newListItem)
         }
