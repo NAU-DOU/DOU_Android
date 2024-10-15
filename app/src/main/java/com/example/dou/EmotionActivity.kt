@@ -76,53 +76,86 @@ class EmotionActivity : AppCompatActivity() {
         if (fileUri != null) {
             Log.d("FileUri", "fileUri가 존재합니다: $fileUri")
 
-            val audioFile = File(Uri.parse(fileUri).path!!)
-            if (audioFile.exists()) {
-                recognizeSpeechFromFile(audioFile)
+            val contentUri = Uri.parse(fileUri)
+            if (contentUri.scheme == "content") {
+                recognizeSpeechFromContent(contentUri)  // Content URI 처리
             } else {
-                Log.e("FileUri", "파일이 존재하지 않습니다: ${audioFile.path}")
+                val audioFile = File(contentUri.path!!)
+                if (audioFile.exists()) {
+                    recognizeSpeechFromContent(contentUri)
+                } else {
+                    Log.e("FileUri", "파일이 존재하지 않습니다: ${audioFile.path}")
+                }
             }
         } else {
             Log.d("FileUri", "fileUri가 존재하지 않습니다.")
         }
     }
 
-    private fun recognizeSpeechFromFile(audioFile: File) {
+    private fun recognizeSpeechFromContent(contentUri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val requestFile = audioFile.asRequestBody("application/octet-stream".toMediaTypeOrNull())
-                val body = MultipartBody.Part.createFormData("media", audioFile.name, requestFile)
+                // Content URI로부터 파일 데이터를 가져오기
+                val inputStream = contentResolver.openInputStream(contentUri)
+                inputStream?.use { stream ->
+                    val tempFile = File.createTempFile("audio_", ".mp3", cacheDir) // 임시 파일 생성
+                    tempFile.outputStream().use { outputStream ->
+                        stream.copyTo(outputStream)
+                    }
 
-                val paramsJson = """
+                    // Multipart로 파일 준비
+                    val requestFile = tempFile.asRequestBody("application/octet-stream".toMediaTypeOrNull())
+                    val body = MultipartBody.Part.createFormData("media", tempFile.name, requestFile)
+
+                    // JSON 형식의 파라미터 준비
+                    val paramsJson = """
                     {
                         "language": "ko-KR",
                         "completion": "sync"
                     }
                 """.trimIndent()
-                val params = paramsJson.toRequestBody("application/json".toMediaTypeOrNull())
+                    val params = paramsJson.toRequestBody("application/json".toMediaTypeOrNull())
 
-                val call = naverSpeechService.recognizeSpeech(body, params, apiKey)
-                call.enqueue(object : Callback<SpeechResponse> {
-                    override fun onFailure(call: Call<SpeechResponse>, t: Throwable) {
-                        Log.e("NaverSTT", "Failed to recognize speech", t)
-                    }
-
-                    override fun onResponse(call: Call<SpeechResponse>, response: Response<SpeechResponse>) {
-                        if (response.isSuccessful) {
-                            val responseBody = response.body()
-                            val originalSentences = responseBody?.text ?: ""
-                            Log.d("NaverSTT", "Response: $originalSentences")
-                            addRoom { roomId ->
-                                sendGPTParagraphMessage(originalSentences, roomId)
+                    // API 호출 (서버로 파일 전송)
+                    val call = naverSpeechService.recognizeSpeech(body, params, apiKey)
+                    call.enqueue(object : Callback<SpeechResponse> {
+                        override fun onFailure(call: Call<SpeechResponse>, t: Throwable) {
+                            Log.e("NaverSTT", "Failed to recognize speech", t)
+                            runOnUiThread {
+                                Toast.makeText(this@EmotionActivity, "음성 인식 실패", Toast.LENGTH_SHORT).show()
                             }
-                        } else {
-                            val errorBody = response.errorBody()?.string()
-                            Log.e("NaverSTT", "Error response: ${response.code()} - $errorBody")
                         }
+
+                        override fun onResponse(call: Call<SpeechResponse>, response: Response<SpeechResponse>) {
+                            if (response.isSuccessful) {
+                                val responseBody = response.body()
+                                val originalSentences = responseBody?.text ?: ""
+                                Log.d("NaverSTT", "Response: $originalSentences")
+
+                                // Room 생성 후 GPT 요청
+                                addRoom { roomId ->
+                                    sendGPTParagraphMessage(originalSentences, roomId)
+                                }
+                            } else {
+                                val errorBody = response.errorBody()?.string()
+                                Log.e("NaverSTT", "Error response: ${response.code()} - $errorBody")
+                                runOnUiThread {
+                                    Toast.makeText(this@EmotionActivity, "오류 발생: ${response.code()}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    })
+                } ?: run {
+                    Log.e("ContentUri", "Content URI에서 파일을 열 수 없습니다.")
+                    runOnUiThread {
+                        Toast.makeText(this@EmotionActivity, "파일을 열 수 없습니다.", Toast.LENGTH_SHORT).show()
                     }
-                })
+                }
             } catch (e: Exception) {
-                Log.e("UploadAudio", "오디오 파일 업로드 중 오류 발생", e)
+                Log.e("ContentUri", "Content URI 처리 중 오류 발생", e)
+                runOnUiThread {
+                    Toast.makeText(this@EmotionActivity, "파일 처리 중 오류 발생", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
