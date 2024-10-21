@@ -107,11 +107,11 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:visibility="invisible"
+            android:visibility="visible"
             android:id="@+id/non_talk_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="30dp"
+            android:layout_marginBottom="50dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cal_txt_layout">
 
@@ -129,9 +129,9 @@
                 android:id="@+id/dou_txt"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="30dp"
                 android:fontFamily="@font/pretendardextrabold"
-                android:text="이 날은 나와 놀지 않았어"
+                android:text="캘린더를 클릭해서"
                 android:textColor="@color/white"
                 android:textSize="20dp"
                 app:layout_constraintEnd_toEndOf="parent"
@@ -143,7 +143,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/pretendardextrabold"
-                android:text="더 자주 대화하자!"
+                android:text="그날의 감정을 확인해보자!"
                 android:textColor="@color/point_color"
                 android:textSize="20dp"
                 app:layout_constraintEnd_toEndOf="parent"

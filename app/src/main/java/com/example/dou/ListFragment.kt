@@ -1,5 +1,6 @@
 package com.example.dou
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -41,11 +42,11 @@ class ListFragment : Fragment() {
     // 리사이클러뷰와 어댑터 설정
     private fun setupRecyclerView() {
         listAdapter = ListAdapter(listItem) { roomId ->
-            // roomId를 RecordFragment로 전달
-            val bundle = Bundle().apply {
-                putInt("roomId", roomId)
+            // roomId를 RecordActivity로 전달
+            val intent = Intent(requireContext(), RecordActivity::class.java).apply {
+                putExtra("roomId", roomId)
             }
-            findNavController().navigate(R.id.action_listFragment_to_recordFragment2, bundle)
+            startActivity(intent)
         }
 
         binding.listRecycler.layoutManager = LinearLayoutManager(context)

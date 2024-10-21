@@ -1,19 +1,20 @@
 package com.example.dou
 
+import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.adapter.FragmentStateAdapter
 
 class ViewPagerAdapter(
-    fragment: Fragment,
-    private val recordList: List<RecordGetData>  // 레코드 리스트를 어댑터로 전달
-) : FragmentStateAdapter(fragment) {
+    activity: AppCompatActivity,
+    private val recordList: List<RecordGetData>  // Pass the list of records to the adapter
+) : FragmentStateAdapter(activity) {
 
     override fun getItemCount(): Int {
-        return recordList.size  // 레코드 개수만큼 페이지 수 설정
+        return recordList.size  // Set the number of pages to the number of records
     }
 
     override fun createFragment(position: Int): Fragment {
-        // 각 페이지에서 데이터를 표시할 Fragment를 생성하여 전달
+        // Create and return the fragment for each page
         val record = recordList[position]
         return FirstFragment.newInstance(record)
     }
