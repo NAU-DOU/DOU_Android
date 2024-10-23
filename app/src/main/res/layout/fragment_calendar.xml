@@ -144,6 +144,7 @@
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/pretendardextrabold"
                 android:text="그날의 감정을 확인해보자!"
+                android:gravity="center"
                 android:textColor="@color/point_color"
                 android:textSize="20dp"
                 app:layout_constraintEnd_toEndOf="parent"

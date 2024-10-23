@@ -62,7 +62,7 @@ class FirstFragment : Fragment() {
                     val chatGetResponse = response.body()
                     chatGetResponse?.let {
                         // 서버로부터 데이터를 성공적으로 받으면 RecyclerView 업데이트
-                        updateRecyclerView(it.data)
+                        updateRecyclerView(it.data.reversed())
                     }
                 } else {
                     Log.e("FirstFragment", "채팅 데이터 가져오기 실패: ${response.code()} - ${response.errorBody()?.string()}")

@@ -268,8 +268,8 @@ class HomeFragment : Fragment() {
             if (file.exists()) {
                 // MediaStore에 파일 저장하기 위한 ContentValues 설정
                 val values = ContentValues().apply {
-                    put(MediaStore.Audio.Media.DISPLAY_NAME, file.nameWithoutExtension + ".flac")
-                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/flac")
+                    put(MediaStore.Audio.Media.DISPLAY_NAME, file.nameWithoutExtension + ".mp3")  // MP3 파일 이름 설정
+                    put(MediaStore.Audio.Media.MIME_TYPE, "audio/mpeg")  // MP3 MIME 타입 설정
                     // MediaStore에 파일을 Music 디렉토리에 저장
                     put(MediaStore.Audio.Media.RELATIVE_PATH, Environment.DIRECTORY_MUSIC)
                 }
@@ -280,33 +280,22 @@ class HomeFragment : Fragment() {
 
                 uri?.let {
                     try {
-                        // FFmpeg를 사용하여 mp3를 flac으로 변환
-                        val outputFile = File(requireContext().getExternalFilesDir(Environment.DIRECTORY_MUSIC), file.nameWithoutExtension + ".flac")
-                        val command = "-i $filePath -c:a flac ${outputFile.absolutePath}"
-
-                        FFmpeg.executeAsync(command) { executionId, returnCode ->
-                            if (returnCode == 0) {
-                                // 파일 변환 성공
-                                Log.d("CreateAudioFile", "File conversion succeeded.")
-                                createdFileUri = Uri.fromFile(outputFile)
-                                file.delete() // 원본 mp3 파일 삭제
-                                Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
-                                onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
-                            } else {
-                                // 변환 실패
-                                Log.e("CreateAudioFile", "File conversion failed with rc=$returnCode.")
-                                Toast.makeText(
-                                    requireContext().applicationContext,
-                                    "오디오 파일 변환 중 오류가 발생했습니다.",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                        // 파일을 MediaStore에 저장
+                        resolver.openOutputStream(it)?.use { outputStream ->
+                            file.inputStream().use { inputStream ->
+                                inputStream.copyTo(outputStream)  // 파일 내용을 MediaStore에 복사
                             }
                         }
+                        file.delete()  // 원본 파일 삭제
+                        Log.d("CreateAudioFile", "File saved successfully.")
+                        createdFileUri = uri
+                        Log.d("CreateAudioFile", "Saved file URI: $createdFileUri")
+                        onActivityResult(CREATE_FILE, Activity.RESULT_OK, null)
                     } catch (e: IOException) {
-                        Log.e("CreateAudioFile", "Error converting file: ${e.message}")
+                        Log.e("CreateAudioFile", "Error saving file: ${e.message}")
                         Toast.makeText(
                             requireContext().applicationContext,
-                            "오디오 파일 변환 중 오류가 발생했습니다.",
+                            "오디오 파일 저장 중 오류가 발생했습니다.",
                             Toast.LENGTH_SHORT
                         ).show()
                     }
@@ -321,6 +310,7 @@ class HomeFragment : Fragment() {
             }
         }
     }
+
 
 
 
