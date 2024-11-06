@@ -108,4 +108,10 @@ dependencies {
     // 뷰페이저 인디케이터 사용
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'com.tbuonomo:dotsindicator:5.0'
+
+    // 비동기 프로그래밍 Rxjava
+    implementation "io.reactivex.rxjava3:rxjava:3.1.9"
+    implementation "io.reactivex.rxjava3:rxandroid:3.0.2"
+    implementation 'com.squareup.retrofit2:adapter-rxjava3:2.11.0' // 적절한 버전으로 교체
+
 }

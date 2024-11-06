@@ -9,6 +9,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivitySentenceBinding
 import com.google.gson.Gson
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.disposables.CompositeDisposable
+import io.reactivex.rxjava3.schedulers.Schedulers
 import model.Message
 import retrofit2.Call
 import retrofit2.Callback
@@ -34,6 +37,8 @@ class SentenceActivity : AppCompatActivity() {
     private var isApiRequestInProgress: Boolean = false
 
     private val recordIdMap = mutableMapOf<Int, Int>() // 각 대화 항목에 대한 recordId를 저장
+
+    private val compositeDisposable = CompositeDisposable()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -187,75 +192,41 @@ class SentenceActivity : AppCompatActivity() {
     private fun analyzeEmotion(sentence: String, roomId: Int) {
         val request = EmotionRequest(userId = 1, sentence = sentence)
         Log.d("EmotionRequest", "Request: $request")
-        val service = RetrofitApi.getRetrofitService
-        val call = service.emotion(request)
 
-        isApiRequestInProgress = true
-        call.enqueue(object : Callback<EmotionResponse> {
-            override fun onResponse(
-                call: Call<EmotionResponse>,
-                response: Response<EmotionResponse>
-            ) {
-                isApiRequestInProgress = false
-                if (response.isSuccessful) {
-                    val emotionResponse = response.body()
-                    if (emotionResponse != null) {
-                        emotionDataList.clear()
-                        val dataList = emotionResponse.data.data
-
-                        // 마지막 문장을 제외하고 emotionDataList에 추가
-                        if (dataList.isNotEmpty() && dataList.last().sentence.isEmpty()) {
-                            emotionDataList.addAll(dataList.dropLast(1))
-                        } else {
-                            emotionDataList.addAll(dataList)
-                        }
-
-                        sentenceItems.clear()
-                        for (i in emotionDataList.indices) {
-                            sentenceItems.add(SentenceItem("대화 ${i + 1}", isSelected = i == 0))
-                        }
-                        adapter.notifyDataSetChanged()
-
-                        Log.d("DataList", "$dataList")
-                        dataList.forEach { data ->
-                            if (data.sentence.isNotEmpty()) {
-                                Log.d(
-                                    "EmotionResponse",
-                                    "Sentence: ${data.sentence}, Sentiment: ${data.sentiment}"
-                                )
-                            }
-                        }
-
-                        if (emotionDataList.isNotEmpty()) {
-                            // 첫 번째 대화를 항상 선택된 상태로 설정
-                            binding.tvSentence.text = emotionDataList[0].sentence
-                            sendFirstSentenceToGPT(emotionDataList[0])
-                            conversationHistoryMap[0] = mutableListOf() // 첫 번째 대화에 대해 초기화
-                        }
-
-                        // RecordPost를 각 emotionDataList에 대해 실행
-                        emotionDataList.forEachIndexed { index, emotionResult ->
-                            postRecordForEmotion(roomId, emotionResult, index) // index를 position으로 전달
-                        }
-
-                        // TODO => patch를 시도하도록 해야됨 왜냐면 마지막 summary에 대한 총 sentiment를 진행해야하기 때문
-                        // 마지막 감정 분석 결과를 바탕으로 roomSent를 계산하고, Patch 요청
-                        val finalSentiment = emotionDataList.lastOrNull()?.sentiment ?: 0
-                        roomPatchSentiment(roomId, finalSentiment)
-                    }
+        val disposable = RetrofitApi.getRetrofitService.emotion(request)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ response ->
+                emotionDataList.clear()
+                val dataList = response.data.data
+                if (dataList.isNotEmpty() && dataList.last().sentence.isEmpty()) {
+                    emotionDataList.addAll(dataList.dropLast(1))
                 } else {
-                    Log.e(
-                        "EmotionAnalyzer",
-                        "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}"
-                    )
+                    emotionDataList.addAll(dataList)
                 }
-            }
+                sentenceItems.clear()
+                for (i in emotionDataList.indices) {
+                    sentenceItems.add(SentenceItem("대화 ${i + 1}", isSelected = i == 0))
+                }
+                adapter.notifyDataSetChanged()
+                Log.d("DataList", "$dataList")
+                dataList.forEach { data ->
+                    Log.d("EmotionResponse", "Sentence: ${data.sentence}, Sentiment: ${data.sentiment}")
+                }
 
-            override fun onFailure(call: Call<EmotionResponse>, t: Throwable) {
-                isApiRequestInProgress = false
-                Log.e("EmotionAnalyzer", "API 호출 실패", t)
-            }
-        })
+                if (emotionDataList.isNotEmpty()) {
+                    binding.tvSentence.text = emotionDataList[0].sentence
+                    sendFirstSentenceToGPT(emotionDataList[0])
+                    conversationHistoryMap[0] = mutableListOf()
+                }
+
+                val finalSentiment = emotionDataList.lastOrNull()?.sentiment_idx ?: 0
+                roomPatchSentiment(roomId, finalSentiment)
+            }, { error ->
+                Log.e("EmotionAnalyzer", "API 호출 실패", error)
+            })
+
+        compositeDisposable.add(disposable)
     }
 
 
@@ -296,58 +267,33 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun sendGPTRequest(userInput: String, reqType: String, reqSent: String) {
-        val request = GPTRequest(
-            userId = 0,
-            context = userInput,
-            reqType = reqType,
-            reqSent = reqSent
-        )
+        val request = GPTRequest(userId = 0, context = userInput, reqType = reqType, reqSent = reqSent)
+        Log.d("GPTRequest", "Request: $request")
 
-        val service = RetrofitApi.getRetrofitService
-        val call = service.getGPTResponse(request)
+        val disposable = RetrofitApi.getRetrofitService.getGPTResponse(request)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe({ response ->
+                val receivedMessage = response.data.response
+                receiveMessage(receivedMessage)
 
-        // Api 요청중이면 탭 이동이 불가능하도록 추가한 조건
-        isApiRequestInProgress = true
-        call.enqueue(object : Callback<GPTResponse> {
-            override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
-                isApiRequestInProgress = false
-                if (response.isSuccessful) {
-                    val gptResponse = response.body()
-                    gptResponse?.let {
-                        val receivedMessage = it.data.response
-
-                        receiveMessage("${receivedMessage}")
-
-                        if (reqType == "TRANSFORM_CONFIRM") {
-                            receiveMessage("\"${userInput}\"으로 긍정적인 마음을 가지는 걸로 하자!")
-                        } else if (it.data.positive != null) {
-                            val positiveMessages = it.data.positive
-                            positiveMessages.forEachIndexed { index, message ->
-                                Log.d("PositiveMessage", message)
-                                receiveMessage("${index + 1}. $message")
-                            }
-                            receiveMessage("위의 세 문장을 참고해서 부정적인 문장을 긍정적인 문장으로 바꿔보자!")
-                            waitingForPositiveResponse = true
-                        }
+                if (reqType == "TRANSFORM_CONFIRM") {
+                    receiveMessage("\"$userInput\"으로 긍정적인 마음을 가지는 걸로 하자!")
+                } else if (response.data.positive != null) {
+                    response.data.positive.forEachIndexed { index, message ->
+                        Log.d("PositiveMessage", message)
+                        receiveMessage("${index + 1}. $message")
                     }
-                } else {
-                    val errorMessage =
-                        "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
-                    Log.e("API Communication", errorMessage)
-                    Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
-                    retrySendGPTRequest(userInput, reqType, reqSent) // 실패 시 재시도
+                    receiveMessage("위의 세 문장을 참고해서 부정적인 문장을 긍정적인 문장으로 바꿔보자!")
+                    waitingForPositiveResponse = true
                 }
-            }
+            }, { error ->
+                Log.e("API Communication", "API 요청 실패", error)
+                Toast.makeText(this, "API 요청 실패", Toast.LENGTH_SHORT).show()
+                retrySendGPTRequest(userInput, reqType, reqSent)
+            })
 
-            override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
-                isApiRequestInProgress = false
-                Log.e("API Communication", "API 통신 실패", t)
-                runOnUiThread {
-                    Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
-                }
-                retrySendGPTRequest(userInput, reqType, reqSent) // 실패 시 재시도
-            }
-        })
+        compositeDisposable.add(disposable)
     }
 
     private fun retrySendGPTRequest(userInput: String, reqType: String, reqSent: String) {
@@ -374,8 +320,8 @@ class SentenceActivity : AppCompatActivity() {
 
     private fun sendFirstSentenceToGPT(data: EmotionResult) {
         if (data.sentence.isNotEmpty()) {
-            val reqType = determineReqType(data.sentiment)
-            val reqSent = determineReqSent(data.sentiment)
+            val reqType = determineReqType(data.sentiment_idx)
+            val reqSent = determineReqSent(data.sentiment_idx)
 
             val request = GPTRequest(
                 userId = 2,
@@ -387,51 +333,38 @@ class SentenceActivity : AppCompatActivity() {
             Log.d("GPT First Request", "$request")
 
             val service = RetrofitApi.getRetrofitService
-            val call = service.getGPTResponse(request)
 
             isApiRequestInProgress = true
-            call.enqueue(object : Callback<GPTResponse> {
-                override fun onResponse(call: Call<GPTResponse>, response: Response<GPTResponse>) {
+            val disposable = service.getGPTResponse(request)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe({ response ->
                     isApiRequestInProgress = false
-                    if (response.isSuccessful) {
-                        val gptResponse = response.body()
-                        gptResponse?.let {
-                            val receivedMessage = it.data.response
+                    response.data?.let {
+                        val receivedMessage = it.response
 
-                            receiveMessage("${data.sentence}" + "라는 말을 했네!")
-                            receiveMessage("${receivedMessage}")
+                        receiveMessage("${data.sentence}라는 말을 했네!")
+                        receiveMessage(receivedMessage)
 
-                            if (it.data.positive != null) {
-                                it.data.positive.forEachIndexed { index, message ->
-                                    Log.d("PositiveMessage", message)
-                                    receiveMessage("${index + 1}. $message")
-                                }
-                                receiveMessage("위의 세 문장을 참고해서 부정적인 문장을 긍정적인 문장으로 바꿔보자!")
-                                waitingForPositiveResponse = true
-                            }
+                        it.positive?.forEachIndexed { index, message ->
+                            Log.d("PositiveMessage", message)
+                            receiveMessage("${index + 1}. $message")
                         }
-                    } else {
-                        val errorMessage =
-                            "API 요청 실패 - 응답 코드: ${response.code()}, 메시지: ${response.message()}"
-                        Log.e("API Communication_First", errorMessage)
-                        Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT)
-                            .show()
-                        retrySendGPTRequest(data.sentence, reqType, reqSent) // 실패 시 재시도
+                        if (it.positive != null) {
+                            receiveMessage("위의 세 문장을 참고해서 부정적인 문장을 긍정적인 문장으로 바꿔보자!")
+                            waitingForPositiveResponse = true
+                        }
                     }
-                }
-
-                override fun onFailure(call: Call<GPTResponse>, t: Throwable) {
+                }, { error ->
                     isApiRequestInProgress = false
-                    Log.e("API Communication", "API 통신 실패", t)
-                    runOnUiThread {
-                        Toast.makeText(applicationContext, "API 통신 실패", Toast.LENGTH_SHORT).show()
-                    }
+                    Log.e("API Communication_First", "API 요청 실패", error)
+                    Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
                     retrySendGPTRequest(data.sentence, reqType, reqSent) // 실패 시 재시도
-                }
-            })
+                })
+
+            compositeDisposable.add(disposable)
         }
     }
-
     private fun logAllConversations() {
         val roomId = intent.getIntExtra("roomId", -1)
         val chatRequestList = mutableListOf<ChatRequest>()
@@ -440,7 +373,7 @@ class SentenceActivity : AppCompatActivity() {
             chatItems.forEachIndexed { index, chatItem ->
                 // 감정 분석 결과에서 sentiment 값을 가져오기
                 val sentiment = if (index < emotionDataList.size) {
-                    emotionDataList[index].sentiment
+                    emotionDataList[index].sentiment_idx
                 } else {
                     1 // 기본값으로 1을 설정 (원하는 기본값으로 설정 가능)
                 }
@@ -581,13 +514,13 @@ class SentenceActivity : AppCompatActivity() {
         logAllConversations()
 
         val roomId = intent.getIntExtra("roomId", -1)
-        val finalSentiment = emotionDataList.lastOrNull()?.sentiment ?: 0
+        val finalSentiment = emotionDataList.lastOrNull()?.sentiment_idx ?: 0
 
         // RoomSentiment를 Patch
         roomPatchSentiment(roomId, finalSentiment) {
             // RoomSentiment Patch가 성공적으로 완료된 후 recordPatch 실행
             emotionDataList.forEachIndexed { index, emotionResult ->
-                patchRecord(index + 1, emotionResult.sentiment, emotionResult.sentence)
+                patchRecord(index + 1, emotionResult.sentiment_idx, emotionResult.sentence)
             }
         }
     }
@@ -669,7 +602,7 @@ class SentenceActivity : AppCompatActivity() {
                         recordIdMap[position] = it.data.recordId
 
                         // 생성된 recordId로 recordPatch를 통해 sentiment와 summary를 설정
-                        patchRecord(it.data.recordId, emotionResult.sentiment, emotionResult.sentence)
+                        patchRecord(it.data.recordId, emotionResult.sentiment_idx, emotionResult.sentence)
                     }
                 } else {
                     Log.e("RecordPost", "Record 생성 실패: ${response.code()} - ${response.errorBody()?.string()}")

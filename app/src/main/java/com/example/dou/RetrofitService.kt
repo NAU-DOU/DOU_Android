@@ -1,5 +1,6 @@
 package com.example.dou
 
+import io.reactivex.rxjava3.core.Single
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -24,7 +25,7 @@ interface RetrofitService {
 
     // 감정 분석
     @POST("/sentiment")
-    fun emotion(@Body request: EmotionRequest): Call<EmotionResponse>
+    fun emotion(@Body request: EmotionRequest): Single<EmotionResponse>
 
     // 기록 등록(저장)API
 //    @POST("/record/register")
@@ -62,7 +63,7 @@ interface RetrofitService {
     fun summary(@Body request: SummaryRequest): Call<SummaryResponse>
 
     @POST("/gpt")
-    fun getGPTResponse(@Body request: GPTRequest): Call<GPTResponse>
+    fun getGPTResponse(@Body request: GPTRequest): Single<GPTResponse>
 
     @POST("/room")
     fun roomAdd(@Body request: RoomAddRequest) : Call<RoomAddRespose>

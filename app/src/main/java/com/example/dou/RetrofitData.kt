@@ -107,12 +107,18 @@ data class EmotionData(
 )
 
 data class EmotionResult(
-    @SerializedName("classes")
-    val classes: List<Double>,
+//    @SerializedName("classes")
+//    val classes: List<Double>,
+//    @SerializedName("sentence")
+//    val sentence: String,
+//    @SerializedName("sentiment")
+//    val sentiment: Int,
     @SerializedName("sentence")
     val sentence: String,
     @SerializedName("sentiment")
-    val sentiment: Int,
+    val sentiment:String,
+    @SerializedName("sentiment_idx")
+    val sentiment_idx: Int
 )
 
 data class RecordResponse(
