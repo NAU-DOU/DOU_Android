@@ -1,6 +1,7 @@
 package com.example.dou
 
 import io.reactivex.rxjava3.core.Single
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -85,4 +86,10 @@ interface RetrofitService {
         @Query("cursorId") cursorId: Int,
         @Query("limit") limit: Int)
     : Call<RoomListResponse>
+
+    @GET("/oauth/kakao")
+    fun getKakao(): Call<ResponseBody>
+
+    @GET("/oauth/kakao/callback")
+    fun getKakaoToken(): Call<ResponseBody>
 }
