@@ -98,4 +98,10 @@ interface RetrofitService {
     fun postRefreshToken(
         @Header("Cookie") refreshTokenCookie: String
     ): Call<ResponseBody>
+
+    @POST("/oauth/kakao/logout")
+    fun kakaoLogout(
+        @Header("Authorization") token: String
+    ): Call<ResponseBody>
+
 }
