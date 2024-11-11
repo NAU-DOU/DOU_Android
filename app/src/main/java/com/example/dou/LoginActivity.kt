@@ -23,13 +23,10 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // 1. 저장된 액세스 토큰 확인
         val accessToken = getSavedAccessToken()
         if (accessToken != null) {
-            // 저장된 토큰이 있다면 바로 MainActivity로 이동
-            moveToMainActivity(accessToken)
+            validateAccessToken(accessToken)
         } else {
-            // 저장된 토큰이 없으면 로그인 버튼 설정
             binding.btnKakao.setOnClickListener {
                 kakaoLogin()
             }
@@ -100,13 +97,10 @@ class LoginActivity : AppCompatActivity() {
                 val jsonObject = JSONObject(data)
                 val dataObject = jsonObject.getJSONObject("data")
                 val accessToken = dataObject.getString("eid_access_token")
+                val refreshToken = dataObject.getString("refresh_token")
 
-                println("추출된 액세스 토큰: $accessToken")
-
-                // 2. 액세스 토큰 저장
-                saveAccessToken(accessToken)
-
-                // 3. MainActivity로 이동
+                println("받은 액세스 토큰: $accessToken")
+                saveTokens(accessToken, refreshToken)
                 moveToMainActivity(accessToken)
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -123,18 +117,72 @@ class LoginActivity : AppCompatActivity() {
         finish()
     }
 
-    // 액세스 토큰을 SharedPreferences에 저장
-    private fun saveAccessToken(accessToken: String) {
+    private fun saveTokens(accessToken: String, refreshToken: String) {
         val sharedPref = getSharedPreferences("auth", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("ACCESS_TOKEN", accessToken)
+            putString("REFRESH_TOKEN", refreshToken)
             apply()
         }
     }
 
-    // 저장된 액세스 토큰 가져오기
     private fun getSavedAccessToken(): String? {
         val sharedPref = getSharedPreferences("auth", Context.MODE_PRIVATE)
         return sharedPref.getString("ACCESS_TOKEN", null)
     }
+
+    private fun getSavedRefreshToken(): String? {
+        val sharedPref = getSharedPreferences("auth", Context.MODE_PRIVATE)
+        return sharedPref.getString("REFRESH_TOKEN", null)
+    }
+
+    private fun validateAccessToken(accessToken: String) {
+        if (accessTokenExpired()) {
+            println("토큰이 만료되었습니다. 갱신을 시도합니다.")
+            refreshAccessToken()
+        } else {
+            println("유효한 토큰입니다. MainActivity로 이동합니다.")
+            moveToMainActivity(accessToken)
+        }
+    }
+
+    private fun accessTokenExpired(): Boolean {
+        val sharedPref = getSharedPreferences("auth", Context.MODE_PRIVATE)
+        return sharedPref.getString("ACCESS_TOKEN", null) == null
+    }
+
+
+    private fun refreshAccessToken() {
+        val refreshToken = getSavedRefreshToken()
+        if (refreshToken != null) {
+            val service = RetrofitApi.getRetrofitService
+            val refreshTokenCookie = "eid_refresh_token=$refreshToken"
+
+            val call = service.postRefreshToken(refreshTokenCookie)
+
+            call.enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    if (response.isSuccessful) {
+                        val body = response.body()?.string()
+                        val jsonObject = JSONObject(body ?: "")
+                        val newAccessToken = jsonObject.getJSONObject("data").getString("eid_access_token")
+
+                        println("갱신된 액세스 토큰: $newAccessToken")
+                        saveTokens(newAccessToken, refreshToken)
+                        moveToMainActivity(newAccessToken)
+                    } else {
+                        println("토큰 갱신 실패: ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    println("네트워크 오류: ${t.message}")
+                }
+            })
+        } else {
+            println("리프레시 토큰이 없습니다. 로그인 화면으로 이동합니다.")
+            kakaoLogin() // 리프레시 토큰이 없으면 로그인 재시도
+        }
+    }
+
 }
