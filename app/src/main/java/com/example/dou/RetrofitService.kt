@@ -105,4 +105,8 @@ interface RetrofitService {
         @Header("Authorization") token: String
     ): Call<ResponseBody>
 
+    @GET("user/access_token_info")
+    fun getkakaoInfo(
+        @Header("Authorization") token: String
+    ):Call<KaKaoData>
 }

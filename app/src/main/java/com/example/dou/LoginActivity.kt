@@ -3,6 +3,7 @@ package com.example.dou
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -15,9 +16,11 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.util.regex.Pattern
+import kotlin.math.exp
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLoginBinding
+    private var expire:Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,7 +29,7 @@ class LoginActivity : AppCompatActivity() {
 
         val accessToken = getSavedAccessToken()
         if (accessToken != null) {
-            validateAccessToken(accessToken)
+            validateAccessToken(accessToken) // 토큰 검사 및 자동 이동 처리
         } else {
             binding.btnKakao.setOnClickListener {
                 kakaoLogin()
@@ -126,8 +129,10 @@ class LoginActivity : AppCompatActivity() {
                 //val refreshToken = dataObject.getString("refresh_token")
 
                 println("받은 액세스 토큰: $accessToken")
-                moveToMainActivity(accessToken)
                 saveAccessTokens(accessToken)
+                moveToMainActivity(accessToken)
+                //refreshAccessToken()
+
             } catch (e: Exception) {
                 e.printStackTrace()
                 println("JSON 파싱 오류: ${e.message}")
@@ -147,7 +152,7 @@ class LoginActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("authAccess", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("ACCESS_TOKEN", accessToken)
-            apply()
+            commit()
         }
     }
 
@@ -155,7 +160,7 @@ class LoginActivity : AppCompatActivity() {
         val sharedPref = getSharedPreferences("authRefresh", Context.MODE_PRIVATE)
         with(sharedPref.edit()) {
             putString("REFRESH_TOKEN", refreshToken)
-            apply()
+            commit()
         }
     }
 
@@ -174,20 +179,56 @@ class LoginActivity : AppCompatActivity() {
     private fun getSavedRefreshToken(): String? = getRefreshToken("REFRESH_TOKEN")
 
 
-    private fun validateAccessToken(accessToken: String) {
-        if (accessTokenExpired()) {
-            println("토큰이 만료되었습니다. 갱신을 시도합니다.")
-            refreshAccessToken()
-        } else {
-            println("유효한 토큰입니다. MainActivity로 이동합니다.")
-            moveToMainActivity(accessToken)
-        }
+    private fun validateAccessToken(token: String) {
+        val service = RetrofitApi.getKaKaoRetrofitService
+        val accessToken = "Bearer $token"
+        Log.d("토큰 정보에서 토큰 길이 확인용", "토큰 확인용: ${accessToken}")
+
+        val call = service.getkakaoInfo(accessToken)
+
+        call.enqueue(object : Callback<KaKaoData> {
+            override fun onResponse(p0: Call<KaKaoData>, p1: Response<KaKaoData>) {
+                if (p1.isSuccessful) {
+                    val expiresIn = p1.body()?.expires_in ?: 0
+                    if (expiresIn > 0) {
+                        // 유효한 토큰이므로 MainActivity로 이동
+                        println("유효한 토큰입니다. MainActivity로 이동합니다.")
+                        moveToMainActivity(token)
+                    } else {
+                        println("토큰이 만료되었습니다. 갱신을 시도합니다.")
+                        refreshAccessToken()
+                    }
+                } else {
+                    val errorBody = p1.errorBody()?.string()
+                    errorBody?.let {
+                        try {
+                            val jsonObject = JSONObject(it)
+                            val code = jsonObject.getInt("code")
+
+                            if (code == -401) {
+                                expire = true
+                                println("토큰이 만료되었습니다. 갱신을 시도합니다.")
+                                refreshAccessToken()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            println("JSON 파싱 오류: ${e.message}")
+                        }
+                    }
+                }
+            }
+
+            override fun onFailure(p0: Call<KaKaoData>, p1: Throwable) {
+                println("토큰 정보 API 네트워크 오류: ${p1.message}")
+            }
+        })
     }
 
-    private fun accessTokenExpired(): Boolean {
-        val sharedPref = getSharedPreferences("authAccess", Context.MODE_PRIVATE)
-        return sharedPref.getString("ACCESS_TOKEN", null) == null
-    }
+
+//    private fun accessTokenExpired(): Boolean {
+//        val sharedPref = getSharedPreferences("authAccess", Context.MODE_PRIVATE)
+//        return sharedPref.getString("ACCESS_TOKEN", null) == null
+//    }
 
     private fun refreshAccessToken() {
         val token = getSavedAccessToken()
@@ -209,7 +250,7 @@ class LoginActivity : AppCompatActivity() {
 
                         println("갱신된 액세스 토큰: $newAccessToken")
                         saveAccessTokens(newAccessToken)
-                        moveToMainActivity(newAccessToken)
+                        //moveToMainActivity(newAccessToken)
                     } else {
                         println("토큰 갱신 실패: ${response.errorBody()?.string()}")
                     }

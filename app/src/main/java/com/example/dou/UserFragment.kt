@@ -3,6 +3,7 @@ package com.example.dou
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -31,30 +32,26 @@ class UserFragment : Fragment() {
 
     private fun kakaoLogout() {
         val accessToken = "Bearer ${getSavedAccessToken()}"
+        Log.d("로그아웃  액세스 토큰", "${accessToken}")
+        val service = RetrofitApi.getRetrofitService
 
-        if (accessToken != null) {
-            val service = RetrofitApi.getRetrofitService
+        val call = service.kakaoLogout(accessToken)
 
-            val call = service.kakaoLogout(accessToken)
-
-            call.enqueue(object : Callback<ResponseBody> {
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                    if (response.isSuccessful) {
-                        println("로그아웃 성공")
-                        clearTokens()
-                        moveToLoginScreen()
-                    } else {
-                        println("카카오 로그아웃 실패: ${response.errorBody()?.string()}")
-                    }
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    println("로그아웃 성공")
+                    clearTokens()
+                    moveToLoginScreen()
+                } else {
+                    println("카카오 로그아웃 실패: ${response.errorBody()?.string()}")
                 }
+            }
 
-                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                    println("네트워크 오류: ${t.message}")
-                }
-            })
-        } else {
-            println("로그아웃 요청에 필요한 액세스 토큰이 없습니다.")
-        }
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                println("네트워크 오류: ${t.message}")
+            }
+        })
     }
 
 

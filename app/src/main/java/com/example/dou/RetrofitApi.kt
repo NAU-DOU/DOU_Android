@@ -18,4 +18,14 @@ object RetrofitApi {
             .build()
     }
     val getRetrofitService:RetrofitService by lazy{getRetrofit.create(RetrofitService::class.java)}
+
+
+    private const val KAKAO_URL = "https://kapi.kakao.com/v1/"
+    private val getKaKaoRetrofit by lazy {
+        Retrofit.Builder()
+            .baseUrl(KAKAO_URL)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+    val getKaKaoRetrofitService:RetrofitService by lazy{getKaKaoRetrofit.create(RetrofitService::class.java)}
 }

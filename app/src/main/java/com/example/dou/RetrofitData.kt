@@ -460,3 +460,9 @@ data class RecordGetData(
         }
     }
 }
+
+data class KaKaoData(
+    val id: Long,
+    val expires_in :Int,
+    val app_id : Int
+)
