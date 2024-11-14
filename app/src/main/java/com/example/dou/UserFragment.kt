@@ -27,6 +27,7 @@ class UserFragment : Fragment() {
             kakaoLogout()
         }
 
+        binding.userName.text= "${getUserData()}"
         return binding.root
     }
 
@@ -58,6 +59,14 @@ class UserFragment : Fragment() {
     private fun clearTokens() {
         val sharedPref = requireContext().getSharedPreferences("authAccess", Context.MODE_PRIVATE)
         val sharedPrefRefresh = requireContext().getSharedPreferences("authRefresh", Context.MODE_PRIVATE)
+        val shared = requireContext().getSharedPreferences("userData" , Context.MODE_PRIVATE)
+
+        with(shared.edit()){
+            remove("USER_NICKNAME")
+            remove("USER_ID")
+            commit()
+        }
+
         with(sharedPref.edit()) {
             remove("ACCESS_TOKEN")
             commit()
@@ -79,4 +88,14 @@ class UserFragment : Fragment() {
         val sharedPref = requireContext().getSharedPreferences("authAccess", Context.MODE_PRIVATE)
         return sharedPref.getString("ACCESS_TOKEN", null)
     }
+
+    private fun getUserData(): String? {
+        val sharedPref = requireContext().getSharedPreferences("userData", Context.MODE_PRIVATE)
+        //val userId = sharedPref.getInt("USER_ID", -1) // 기본값 -1
+        val userNickname = sharedPref.getString("USER_NICKNAME", null)
+
+        // userId와 userNickname을 JSON 형식의 문자열로 반환
+        return userNickname
+    }
+
 }

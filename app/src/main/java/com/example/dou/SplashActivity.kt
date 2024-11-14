@@ -35,7 +35,8 @@ class SplashActivity : AppCompatActivity() {
             Log.d("AccessToken", "액세스토큰 스플래시: ${accessToken}")
             if (accessToken != null) {
                 validateAccessToken(accessToken)
-            } else {
+            }
+            else {
                 navigateToLogin()
             }
         }, 1000) // 애니메이션 길이와 동일하게 설정 (1000ms)
@@ -107,6 +108,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun refreshAccessToken(token:String) {
+        Log.d("스플래시 토큰", "$token")
         val refreshToken = getRefreshToken()
 
         if (refreshToken != null) {
