@@ -115,25 +115,34 @@ class SplashActivity : AppCompatActivity() {
             Log.d("리프레시토큰", "리프레시 토큰 내놔: ${refreshTokenCookie}")
 
             val call = service.postRefreshToken("Bearer $token", refreshTokenCookie)
-            call.enqueue(object : Callback<ResponseBody> {
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            call.enqueue(object : Callback<KaKaoRefreshResponse> {
+                override fun onResponse(call: Call<KaKaoRefreshResponse>, response: Response<KaKaoRefreshResponse>) {
                     if (response.isSuccessful) {
-                        val body = response.body()?.string()
-                        val jsonObject = JSONObject(body ?: "")
-                        val newAccessToken = jsonObject.getJSONObject("data").getString("eid_access_token")
+                        val data = response.body()?.data
 
+                        val newAccessToken = data?.eid_access_token
+
+//                        val body = response.body()?.string()
+//                        val jsonObject = JSONObject(body ?: "")
+//                        val newAccessToken = jsonObject.getJSONObject("data").getString("eid_access_token")
+
+                        if (newAccessToken != null) {
+                            println("갱신된 액세스 토큰: $newAccessToken")
+                            saveAccessTokens(newAccessToken)
+                            moveToMainActivity(newAccessToken)
+                        }
                         Log.d("refreshAccessToken", "갱신된 액세스 토큰: $newAccessToken")
-                        saveAccessTokens(newAccessToken)  // 새 액세스 토큰을 SharedPreferences에 저장
+                        //saveAccessTokens(newAccessToken)  // 새 액세스 토큰을 SharedPreferences에 저장
 
                         // 갱신된 액세스 토큰으로 유효성 검사 후 MainActivity로 이동
-                        moveToMainActivity(newAccessToken)
+                       // moveToMainActivity(newAccessToken)
                     } else {
                         Log.e("refreshAccessToken", "토큰 갱신 실패: ${response.errorBody()?.string()}")
                         navigateToLogin()  // 갱신 실패 시 로그인 화면으로 이동
                     }
                 }
 
-                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                override fun onFailure(call: Call<KaKaoRefreshResponse>, t: Throwable) {
                     Log.e("refreshAccessToken", "네트워크 오류: ${t.message}")
                     navigateToLogin()  // 네트워크 오류 시 로그인 화면으로 이동
                 }

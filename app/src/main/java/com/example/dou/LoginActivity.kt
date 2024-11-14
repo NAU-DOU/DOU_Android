@@ -28,12 +28,16 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         val accessToken = getSavedAccessToken()
+        Log.e("시작 액세스 토큰","$accessToken")
         if (accessToken != null) {
             validateAccessToken(accessToken) // 토큰 검사 및 자동 이동 처리
         } else {
             binding.btnKakao.setOnClickListener {
                 kakaoLogin()
             }
+        }
+        binding.btnKakao.setOnClickListener {
+            kakaoLogin()
         }
     }
 
@@ -126,9 +130,14 @@ class LoginActivity : AppCompatActivity() {
                 val jsonObject = JSONObject(data)
                 val dataObject = jsonObject.getJSONObject("data")
                 val accessToken = dataObject.getString("eid_access_token")
+                val userId = dataObject.getInt("userId")
+                val userNickname = dataObject.getString("userNickname")
                 //val refreshToken = dataObject.getString("refresh_token")
 
                 println("받은 액세스 토큰: $accessToken")
+                println("받은 userId: $userId")
+                println("받은 userNickname: $userNickname")
+                saveUserData(userId, userNickname)
                 saveAccessTokens(accessToken)
                 moveToMainActivity(accessToken)
                 //refreshAccessToken()
@@ -137,6 +146,16 @@ class LoginActivity : AppCompatActivity() {
                 e.printStackTrace()
                 println("JSON 파싱 오류: ${e.message}")
             }
+        }
+    }
+
+    // userId와 userNickname을 SharedPreferences에 저장하는 메서드
+    private fun saveUserData(userId: Int, userNickname: String) {
+        val sharedPref = getSharedPreferences("userData", Context.MODE_PRIVATE)
+        with(sharedPref.edit()) {
+            putInt("USER_ID", userId)
+            putString("USER_NICKNAME", userNickname)
+            apply()
         }
     }
 
@@ -241,22 +260,30 @@ class LoginActivity : AppCompatActivity() {
 
             val call = service.postRefreshToken(accessToken,refreshTokenCookie)
 
-            call.enqueue(object : Callback<ResponseBody> {
-                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+            call.enqueue(object : Callback<KaKaoRefreshResponse> {
+                override fun onResponse(call: Call<KaKaoRefreshResponse>, response: Response<KaKaoRefreshResponse>) {
                     if (response.isSuccessful) {
-                        val body = response.body()?.string()
-                        val jsonObject = JSONObject(body ?: "")
-                        val newAccessToken = jsonObject.getJSONObject("data").getString("eid_access_token")
+                        val data = response.body()?.data
+                        Log.d("로그인 리프레시 토큰", "로그인 리프레시 토큰: $data")
+                        val newAccessToken = data?.eid_access_token?.let { "Bearer $it" }
 
-                        println("갱신된 액세스 토큰: $newAccessToken")
-                        saveAccessTokens(newAccessToken)
-                        //moveToMainActivity(newAccessToken)
+//                        val body = response.body()?.string()
+//                        val jsonObject = JSONObject(body ?: "")
+//                        val newAccessToken = jsonObject.getJSONObject("data").getString("eid_access_token")
+
+                        if (newAccessToken != null) {
+                            println("갱신된 액세스 토큰: $newAccessToken")
+                            saveAccessTokens(newAccessToken)
+                            moveToMainActivity(newAccessToken)
+                        } else {
+                            println("갱신된 액세스 토큰이 null입니다.")
+                        }
                     } else {
                         println("토큰 갱신 실패: ${response.errorBody()?.string()}")
                     }
                 }
 
-                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                override fun onFailure(call: Call<KaKaoRefreshResponse>, t: Throwable) {
                     println("네트워크 오류: ${t.message}")
                 }
             })

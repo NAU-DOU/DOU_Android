@@ -466,3 +466,29 @@ data class KaKaoData(
     val expires_in :Int,
     val app_id : Int
 )
+
+data class KaKaoLoginResponse(
+    val status: Int,
+    val code: String,
+    val message: String,
+    val data : KaKaoLoginData
+)
+
+data class KaKaoLoginData(
+    val ok: Boolean,
+    val eid_access_token: String,
+    val userId: Int,
+    val userNickname: String
+)
+
+data class KaKaoRefreshResponse(
+    val status: Int,
+    val code: String,
+    val message: String,
+    val data : KaKaoRefreshData
+)
+
+data class KaKaoRefreshData(
+    val ok: Boolean,
+    val eid_access_token: String,
+)
