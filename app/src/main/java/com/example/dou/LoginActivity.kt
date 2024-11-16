@@ -93,23 +93,27 @@ class LoginActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String) {
                 println("웹페이지 로딩 완료, JavaScript 호출 시도")
+
+                // JavaScript 호출
                 view.loadUrl("javascript:window.Android.sendDataToApp(document.body.innerText);")
 
-                // 쿠키를 가져오는 부분
+                // 쿠키 처리
                 val cookieManager = CookieManager.getInstance()
                 val cookies = cookieManager.getCookie(url)
 
                 if (cookies != null) {
                     println("웹뷰 쿠키: $cookies")
 
-                    // 리프레시 토큰 추출
                     val refreshToken = extractRefreshToken(cookies)
                     if (refreshToken != null) {
                         println("리프레시 토큰: $refreshToken")
                         saveRefreshTokens(refreshToken)
+                    } else {
+                        println("리프레시 토큰이 없습니다.")
                     }
                 }
             }
+
         }
 
         webView.loadUrl(url)
@@ -126,28 +130,30 @@ class LoginActivity : AppCompatActivity() {
         fun sendDataToApp(data: String) {
             println("받은 데이터: $data")
 
+            // JSON 형식인지 확인
             try {
                 val jsonObject = JSONObject(data)
                 val dataObject = jsonObject.getJSONObject("data")
                 val accessToken = dataObject.getString("eid_access_token")
                 val userId = dataObject.getInt("userId")
                 val userNickname = dataObject.getString("userNickname")
-                //val refreshToken = dataObject.getString("refresh_token")
 
                 println("받은 액세스 토큰: $accessToken")
                 println("받은 userId: $userId")
                 println("받은 userNickname: $userNickname")
+
                 saveUserData(userId, userNickname)
                 saveAccessTokens(accessToken)
                 moveToMainActivity(accessToken)
-                //refreshAccessToken()
-
             } catch (e: Exception) {
                 e.printStackTrace()
                 println("JSON 파싱 오류: ${e.message}")
+                // 받은 데이터가 JSON이 아닐 경우 에러 처리
+                Log.e("JSON Error", "데이터가 JSON 형식이 아닙니다: $data")
             }
         }
     }
+
 
     // userId와 userNickname을 SharedPreferences에 저장하는 메서드
     private fun saveUserData(userId: Int, userNickname: String) {
@@ -265,7 +271,8 @@ class LoginActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val data = response.body()?.data
                         Log.d("로그인 리프레시 토큰", "로그인 리프레시 토큰: $data")
-                        val newAccessToken = data?.eid_access_token?.let { "Bearer $it" }
+                        // 토큰 값 추출
+                        val newAccessToken = data?.eid_access_token
 
 //                        val body = response.body()?.string()
 //                        val jsonObject = JSONObject(body ?: "")

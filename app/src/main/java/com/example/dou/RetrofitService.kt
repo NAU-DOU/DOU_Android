@@ -10,6 +10,7 @@ import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
+import retrofit2.http.Url
 
 interface RetrofitService {
 
@@ -109,4 +110,7 @@ interface RetrofitService {
     fun getkakaoInfo(
         @Header("Authorization") token: String
     ):Call<KaKaoData>
+
+    @GET
+    fun getJsonResponse(@Url url: String): Call<ResponseBody>
 }

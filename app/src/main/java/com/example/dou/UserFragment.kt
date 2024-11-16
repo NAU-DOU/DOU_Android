@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.webkit.CookieManager
 import com.example.dou.databinding.FragmentUserBinding
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -44,6 +45,7 @@ class UserFragment : Fragment() {
                     println("로그아웃 성공")
                     clearTokens()
                     moveToLoginScreen()
+                    clearWebViewCookies()
                 } else {
                     println("카카오 로그아웃 실패: ${response.errorBody()?.string()}")
                 }
@@ -82,6 +84,13 @@ class UserFragment : Fragment() {
         val intent = Intent(requireContext(), LoginActivity::class.java)
         startActivity(intent)
         requireActivity().finish() // Fragment에서 Activity 종료
+    }
+
+
+    private fun clearWebViewCookies() {
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.removeAllCookies(null)
+        cookieManager.flush()
     }
 
     private fun getSavedAccessToken(): String? {
