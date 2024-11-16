@@ -93,7 +93,7 @@ interface RetrofitService {
     fun getKakao(): Call<ResponseBody>
 
     @GET("/oauth/kakao/callback")
-    fun getKakaoToken(): Call<ResponseBody>
+    fun getKakaoToken(): Call<KaKaoLoginResponse>
 
     @POST("/oauth/kakao/refresh")
     fun postRefreshToken(

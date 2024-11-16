@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.ViewGroup
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
@@ -85,35 +86,39 @@ class LoginActivity : AppCompatActivity() {
         setContentView(webView)
 
         webView.settings.javaScriptEnabled = true
-        webView.addJavascriptInterface(WebAppInterface(), "Android")
+        webView.settings.domStorageEnabled = true // DOM Storage 활성화
+        webView.addJavascriptInterface(WebAppInterface(webView), "Android")
 
-        //Cookie 관리를 위한 매니저
-        CookieManager.getInstance().setAcceptCookie(true)
+        // Cookie 설정
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.setAcceptCookie(true)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            cookieManager.setAcceptThirdPartyCookies(webView, true)
+        }
 
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView, url: String) {
-                println("웹페이지 로딩 완료, JavaScript 호출 시도")
+                Log.d("WebView", "Page loaded: $url")
 
                 // JavaScript 호출
                 view.loadUrl("javascript:window.Android.sendDataToApp(document.body.innerText);")
 
                 // 쿠키 처리
-                val cookieManager = CookieManager.getInstance()
                 val cookies = cookieManager.getCookie(url)
+                Log.d("Cookies", "Cookies for $url: $cookies")
 
                 if (cookies != null) {
-                    println("웹뷰 쿠키: $cookies")
-
                     val refreshToken = extractRefreshToken(cookies)
                     if (refreshToken != null) {
-                        println("리프레시 토큰: $refreshToken")
+                        Log.d("RefreshToken", "Extracted refresh token: $refreshToken")
                         saveRefreshTokens(refreshToken)
                     } else {
-                        println("리프레시 토큰이 없습니다.")
+                        Log.e("Cookie Error", "Refresh token not found in cookies.")
                     }
+                } else {
+                    Log.e("Cookie Error", "No cookies found for $url.")
                 }
             }
-
         }
 
         webView.loadUrl(url)
@@ -125,12 +130,12 @@ class LoginActivity : AppCompatActivity() {
         return if (matcher.find()) matcher.group(1) else null
     }
 
-    inner class WebAppInterface {
+    // WebAppInterface 클래스 수정
+    inner class WebAppInterface(private val webView: WebView) {
         @JavascriptInterface
         fun sendDataToApp(data: String) {
-            println("받은 데이터: $data")
+            Log.d("Received Data", data)
 
-            // JSON 형식인지 확인
             try {
                 val jsonObject = JSONObject(data)
                 val dataObject = jsonObject.getJSONObject("data")
@@ -138,18 +143,32 @@ class LoginActivity : AppCompatActivity() {
                 val userId = dataObject.getInt("userId")
                 val userNickname = dataObject.getString("userNickname")
 
-                println("받은 액세스 토큰: $accessToken")
-                println("받은 userId: $userId")
-                println("받은 userNickname: $userNickname")
+                Log.d("AccessToken", accessToken)
+                Log.d("UserId", userId.toString())
+                Log.d("UserNickname", userNickname)
 
                 saveUserData(userId, userNickname)
                 saveAccessTokens(accessToken)
+
+                // 쿠키 가져오기
+                val cookieManager = CookieManager.getInstance()
+                val cookies = cookieManager.getCookie("https://your-backend-url.com") // 서버의 정확한 도메인
+                if (cookies != null) {
+                    val refreshToken = extractRefreshToken(cookies)
+                    if (refreshToken != null) {
+                        saveRefreshTokens(refreshToken)
+                    }
+                }
+
+                // 데이터 처리가 완료되면 웹뷰를 제거
+                runOnUiThread {
+                    (webView.parent as? ViewGroup)?.removeView(webView)
+                }
+
+                // MainActivity로 이동
                 moveToMainActivity(accessToken)
             } catch (e: Exception) {
-                e.printStackTrace()
-                println("JSON 파싱 오류: ${e.message}")
-                // 받은 데이터가 JSON이 아닐 경우 에러 처리
-                Log.e("JSON Error", "데이터가 JSON 형식이 아닙니다: $data")
+                Log.e("JSON Parsing Error", "Error parsing JSON: ${e.message}")
             }
         }
     }
