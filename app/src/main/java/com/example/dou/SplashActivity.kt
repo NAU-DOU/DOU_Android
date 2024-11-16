@@ -93,6 +93,7 @@ class SplashActivity : AppCompatActivity() {
                         if (newAccessToken != null) {
                             Log.d("SplashActivity", "New AccessToken received: $newAccessToken")
                             saveAccessTokens(newAccessToken) // 새로운 액세스 토큰 저장
+                            App.prefs.token = newAccessToken
                             moveToMainActivity() // 메인 화면으로 이동
                         } else {
                             Log.e("SplashActivity", "Token refresh failed. New AccessToken is null.")

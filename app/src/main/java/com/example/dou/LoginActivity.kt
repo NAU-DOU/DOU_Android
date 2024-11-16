@@ -28,6 +28,8 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        App.prefs.token = null
+
         val accessToken = getSavedAccessToken()
         Log.e("시작 액세스 토큰","$accessToken")
         if (accessToken != null) {
@@ -149,6 +151,9 @@ class LoginActivity : AppCompatActivity() {
 
                 saveUserData(userId, userNickname)
                 saveAccessTokens(accessToken)
+
+                App.prefs.token = accessToken
+                Log.d("Login_Token", "Access Token : ${accessToken}")
 
                 // 쿠키 가져오기
                 val cookieManager = CookieManager.getInstance()
@@ -300,6 +305,7 @@ class LoginActivity : AppCompatActivity() {
                         if (newAccessToken != null) {
                             println("갱신된 액세스 토큰: $newAccessToken")
                             saveAccessTokens(newAccessToken)
+                            App.prefs.token = newAccessToken
                             moveToMainActivity(newAccessToken)
                         } else {
                             println("갱신된 액세스 토큰이 null입니다.")

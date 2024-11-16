@@ -2,12 +2,12 @@ package com.example.dou
 
 import android.app.Application
 
-//class App : Application(){
-////    companion object{
-////        lateinit var prefs:Prefs
-////    }
-////    override fun onCreate() {
-////        prefs=Prefs(applicationContext)
-////        super.onCreate()
-////    }
-//}
+class App : Application(){
+    companion object{
+        lateinit var prefs:Prefs
+    }
+    override fun onCreate() {
+        super.onCreate()
+        prefs = Prefs(applicationContext)
+    }
+}
