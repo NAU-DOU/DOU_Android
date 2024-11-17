@@ -106,8 +106,15 @@ class SentenceActivity : AppCompatActivity() {
 
     // Swagger에서 gpt summary부분 이용하기
     private fun summaryChat(context: String, roomId: Int){
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
         // SummaryRequest 생성
-        val request = SummaryRequest(userId = 1, context = context)
+        val request = SummaryRequest(userId = userId, context = context)
         Log.d("SummaryRequest", "Request: $request")
 
         // Retrofit 서비스 인터페이스 호출
@@ -226,6 +233,11 @@ class SentenceActivity : AppCompatActivity() {
                     binding.tvSentence.text = emotionDataList[0].sentence
                     sendFirstSentenceToGPT(emotionDataList[0])
                     conversationHistoryMap[0] = mutableListOf()
+                }
+
+                // RecordPost를 각 emotionDataList에 대해 실행
+                emotionDataList.forEachIndexed { index, emotionResult ->
+                    postRecordForEmotion(roomId, emotionResult, index) // index를 position으로 전달
                 }
 
                 val finalSentiment = emotionDataList.lastOrNull()?.sentiment_idx ?: 0

@@ -1,5 +1,6 @@
 package com.example.dou
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -22,7 +23,6 @@ class CalendarFragment : Fragment() {
     private val binding get() = _binding!!
 
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<View>
-
     private lateinit var adapter: ChatAdapter
     private val chatItems = mutableListOf<ChatItem>()
 
@@ -49,11 +49,12 @@ class CalendarFragment : Fragment() {
 
         val calItems = ArrayList<CalItem>()
         for (i in 1..lastDayOfMonth) {
-            calItems.add(CalItem(i, null)) // 초기에는 sentiment를 null로 설정
+            calItems.add(CalItem(i, null)) // Initialize with null sentiment
         }
 
-        // RecyclerView에 어댑터 설정
+        // RecyclerView Adapter for Calendar
         val calAdapter = CalAdapter(calItems) { position ->
+            val selectedSentiment = calItems[position].sentiment
             val calendar = Calendar.getInstance()
             calendar.set(Calendar.YEAR, currentYear)
             calendar.set(Calendar.MONTH, currentMonth)
@@ -61,43 +62,18 @@ class CalendarFragment : Fragment() {
 
             val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
             val formattedDate = dateFormat.format(calendar.time)
-            val sentiment = calItems[position].sentiment
 
             // Pass both the formattedDate and sentiment to the bottom sheet
-            openBottomSheet(formattedDate, sentiment)
+            openBottomSheet(formattedDate, selectedSentiment)
         }
 
         binding.calRecycler.layoutManager = GridLayoutManager(context, 7)
         binding.calRecycler.adapter = calAdapter
 
-        for (i in 1..lastDayOfMonth) {
-            val calendar = Calendar.getInstance()
-            calendar.set(Calendar.YEAR, currentYear)
-            calendar.set(Calendar.MONTH, currentMonth)
-            calendar.set(Calendar.DAY_OF_MONTH, i)
-            val formattedDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(calendar.time)
+        // Fetch data for the calendar
+        fetchRoomData(calItems, calAdapter)
 
-            RetrofitApi.getRetrofitService.getRoomDate(formattedDate, cursorId = 0, limit=10).enqueue(object : Callback<RoomListResponse> {
-                override fun onResponse(call: Call<RoomListResponse>, response: Response<RoomListResponse>) {
-                    if (response.isSuccessful) {
-                        val roomList = response.body()?.data ?: emptyList()
-                        val roomSent = roomList.lastOrNull()?.roomSent
-
-                        // Update CalItem list
-                        calItems[i - 1] = CalItem(i, roomSent)
-                        calAdapter.notifyItemChanged(i - 1)
-                    } else {
-                        Log.e("CalendarFragment", "API 호출 실패: ${response.code()}")
-                    }
-                }
-
-                override fun onFailure(call: Call<RoomListResponse>, t: Throwable) {
-                    Log.e("CalendarFragment", "API 호출 실패", t)
-                }
-            })
-        }
-
-        // BottomSheet 설정
+        // BottomSheet setup
         bottomSheetBehavior = BottomSheetBehavior.from(binding.emotionTitleLayout)
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
 
@@ -111,7 +87,7 @@ class CalendarFragment : Fragment() {
         _binding = null
     }
 
-    fun getLastDayOfMonth(year: Int, month: Int): Int {
+    private fun getLastDayOfMonth(year: Int, month: Int): Int {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.YEAR, year)
         calendar.set(Calendar.MONTH, month)
@@ -126,12 +102,43 @@ class CalendarFragment : Fragment() {
         }
     }
 
-    // Updated openBottomSheet to accept the sentiment value
-    private fun openBottomSheet(formattedDate: String, sentiment: Int?) {
-        // Display the selected date in the BottomSheet (you can customize how you want to show this)
-        //binding.selectedDate.text = formattedDate
+    private fun fetchRoomData(calItems: ArrayList<CalItem>, calAdapter: CalAdapter) {
+        val userId = getUserId()
+        val limit = 31 // Maximum number of days in a month
 
-        // Map sentiment to a user-friendly string
+        RetrofitApi.getRetrofitService.getAllRooms(userId = userId, cursorId = 0, limit = limit)
+            .enqueue(object : Callback<RoomListResponse> {
+                override fun onResponse(call: Call<RoomListResponse>, response: Response<RoomListResponse>) {
+                    if (response.isSuccessful) {
+                        val roomList = response.body()?.data ?: emptyList()
+
+                        // Log full API response for debugging
+                        Log.d("CalendarFragment", "API Response: $roomList")
+
+                        // Map room data to calendar items
+                        roomList.forEach { room ->
+                            val day = room.roomDate.split(".")[2].toIntOrNull() ?: return@forEach
+                            if (day in 1..calItems.size) {
+                                calItems[day - 1] = CalItem(day, room.roomSent)
+                                Log.d("CalendarFragment", "Mapped day $day with roomSent: ${room.roomSent}")
+                            }
+                        }
+                        calAdapter.notifyDataSetChanged()
+                    } else {
+                        Log.e("CalendarFragment", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    }
+                }
+
+                override fun onFailure(call: Call<RoomListResponse>, t: Throwable) {
+                    Log.e("CalendarFragment", "API 호출 실패", t)
+                }
+            })
+    }
+
+    private fun openBottomSheet(formattedDate: String, sentiment: Int?) {
+        // Log the selected date and sentiment
+        Log.d("CalendarFragment", "Selected Date: $formattedDate, Sentiment: $sentiment")
+
         val sentimentText = when (sentiment) {
             0 -> "행복이야"
             1 -> "놀람이야"
@@ -143,12 +150,8 @@ class CalendarFragment : Fragment() {
             else -> "알 수 없어"
         }
 
-        // android:text="이 날은 나와 놀지 않았어"
-        // Set sentiment in the BottomSheet
         binding.douTxt.text = "이 날의 감정은 ${sentimentText}"
 
-
-        // Set different messages for douTxt2 based on the sentiment
         val douTxt2Message = when (sentiment) {
             0 -> "너 정말 기뻤구나! 자주 이야기 나누자!"
             1 -> "뭔가 놀랐구나! 무슨 일이 있었어?"
@@ -160,33 +163,34 @@ class CalendarFragment : Fragment() {
             else -> "더 자주 대화하자!"
         }
 
-        // Set douTxt2's text based on the sentiment
         binding.douTxt2.text = douTxt2Message
-        //android:text="더 자주 대화하자!"
 
-        // Change the image based on the sentiment
         val imageResource = when (sentiment) {
-            0 -> R.drawable.ic_happy // Replace with the actual resource ID for happiness
-            1 -> R.drawable.home_dou // Replace with the actual resource ID for surprise
-            2 -> R.drawable.ic_neutral // Replace with the actual resource ID for neutral
-            3 -> R.drawable.ic_sad // Replace with the actual resource ID for sadness
-            4 -> R.drawable.ic_hmm // Replace with the actual resource ID for discomfort
-            5 -> R.drawable.ic_bad // Replace with the actual resource ID for anger
-            6 -> R.drawable.ic_bad // Replace with the actual resource ID for fear
-            else -> R.drawable.home_dou // Default image for undefined sentiment
+            0 -> R.drawable.ic_happy
+            1 -> R.drawable.home_dou
+            2 -> R.drawable.ic_neutral
+            3 -> R.drawable.ic_sad
+            4 -> R.drawable.ic_hmm
+            5 -> R.drawable.ic_bad
+            6 -> R.drawable.ic_bad
+            else -> R.drawable.home_dou
         }
 
-        // Set the image resource to the ImageView in the BottomSheet
         binding.calDou.setImageResource(imageResource)
 
-        // If no chat is found, you can show a message
         if (sentiment == null) {
             binding.nonTalkLayout.visibility = View.VISIBLE
+            Log.d("CalendarFragment", "No sentiment data for selected date.")
         } else {
             binding.nonTalkLayout.visibility = View.VISIBLE
         }
 
-        // Expand the BottomSheet
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_EXPANDED
+    }
+
+
+    private fun getUserId(): Int {
+        val sharedPref = requireContext().getSharedPreferences("userData", Context.MODE_PRIVATE)
+        return sharedPref.getInt("USER_ID", -1)
     }
 }
