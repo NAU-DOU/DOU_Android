@@ -119,4 +119,10 @@ interface RetrofitService {
 
     @GET
     fun getJsonResponse(@Url url: String): Call<ResponseBody>
+
+    @POST("/mypage/usedate")
+    fun postUseDate(): Call<PostUseDateResponse>
+
+    @POST("/mypage/sentcount")
+    fun postSentCount(@Body request: PostSentCountRequest) : Call<PostSentCountResponse>
 }

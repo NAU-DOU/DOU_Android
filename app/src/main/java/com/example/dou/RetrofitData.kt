@@ -511,3 +511,27 @@ data class RecordIdResult(
     val recordSummary: String,
     val recordSent: Int,
 )
+
+data class PostUseDateResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: UseDateData
+)
+
+data class UseDateData(
+    val useDate: Int
+)
+
+data class PostSentCountRequest(
+    val sentCode: Int
+)
+
+data class PostSentCountResponse(
+    val useSent: String,
+    val sentCount: Int
+)

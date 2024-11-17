@@ -4,11 +4,11 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.webkit.CookieManager
+import androidx.fragment.app.Fragment
 import com.example.dou.databinding.FragmentUserBinding
 import okhttp3.ResponseBody
 import retrofit2.Call
@@ -24,46 +24,97 @@ class UserFragment : Fragment() {
     ): View? {
         binding = FragmentUserBinding.inflate(inflater, container, false)
 
+        // Set user name
+        binding.userName.text = getUserData()
+
+
+        fetchUseDate()
+        fetchSentCount(1) // Always using 1 for happiness
+
+
+        // Logout button
         binding.logoutBtn.setOnClickListener {
             kakaoLogout()
         }
 
-        binding.userName.text= "${getUserData()}"
         return binding.root
     }
 
-    private fun kakaoLogout() {
-        val accessToken = "Bearer ${getSavedAccessToken()}"
-        Log.d("로그아웃  액세스 토큰", "${accessToken}")
+    private fun fetchUseDate() {
         val service = RetrofitApi.getRetrofitService
 
-        val call = service.kakaoLogout(accessToken)
-
-        call.enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+        service.postUseDate().enqueue(object : Callback<PostUseDateResponse> {
+            override fun onResponse(call: Call<PostUseDateResponse>, response: Response<PostUseDateResponse>) {
                 if (response.isSuccessful) {
-                    println("로그아웃 성공")
-                    clearTokens()
-                    moveToLoginScreen()
-                    clearWebViewCookies()
+                    val useDate = response.body()?.data?.useDate ?: 0
+                    Log.d("UserFragment", "Use date: $useDate")
+
+                    // Update UI with use date
+                    binding.dayDou2.text = "${useDate}일"
                 } else {
-                    println("카카오 로그아웃 실패: ${response.errorBody()?.string()}")
+                    Log.e("UserFragment", "Failed to fetch use date: ${response.errorBody()?.string()}")
                 }
             }
 
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                println("네트워크 오류: ${t.message}")
+            override fun onFailure(call: Call<PostUseDateResponse>, t: Throwable) {
+                Log.e("UserFragment", "Network error while fetching use date: ${t.message}")
             }
         })
     }
 
+    private fun fetchSentCount(sentCode: Int) {
+        val service = RetrofitApi.getRetrofitService
+        val request = PostSentCountRequest(sentCode)
+
+        service.postSentCount(request).enqueue(object : Callback<PostSentCountResponse> {
+            override fun onResponse(call: Call<PostSentCountResponse>, response: Response<PostSentCountResponse>) {
+                if (response.isSuccessful) {
+                    val useSent = response.body()?.useSent ?: "알 수 없음"
+                    val sentCount = response.body()?.sentCount ?: 0
+                    Log.d("UserFragment", "UseSent: $useSent, SentCount: $sentCount")
+
+                    // Update UI with sentiment count
+                    binding.timeDou2.text = "${sentCount}번"
+                } else {
+                    Log.e("UserFragment", "Failed to fetch sentiment count: ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<PostSentCountResponse>, t: Throwable) {
+                Log.e("UserFragment", "Network error while fetching sentiment count: ${t.message}")
+            }
+        })
+    }
+
+    private fun kakaoLogout() {
+        val accessToken = "Bearer ${getSavedAccessToken()}"
+        Log.d("UserFragment", "Access token for logout: $accessToken")
+        val service = RetrofitApi.getRetrofitService
+
+        service.kakaoLogout(accessToken).enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    Log.d("UserFragment", "Logout successful")
+                    clearTokens()
+                    moveToLoginScreen()
+                    clearWebViewCookies()
+                } else {
+                    Log.e("UserFragment", "Logout failed: ${response.errorBody()?.string()}")
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                Log.e("UserFragment", "Network error during logout: ${t.message}")
+            }
+        })
+    }
 
     private fun clearTokens() {
         val sharedPref = requireContext().getSharedPreferences("authAccess", Context.MODE_PRIVATE)
         val sharedPrefRefresh = requireContext().getSharedPreferences("authRefresh", Context.MODE_PRIVATE)
-        val shared = requireContext().getSharedPreferences("userData" , Context.MODE_PRIVATE)
+        val shared = requireContext().getSharedPreferences("userData", Context.MODE_PRIVATE)
 
-        with(shared.edit()){
+        with(shared.edit()) {
             remove("USER_NICKNAME")
             remove("USER_ID")
             commit()
@@ -83,9 +134,8 @@ class UserFragment : Fragment() {
     private fun moveToLoginScreen() {
         val intent = Intent(requireContext(), LoginActivity::class.java)
         startActivity(intent)
-        requireActivity().finish() // Fragment에서 Activity 종료
+        requireActivity().finish()
     }
-
 
     private fun clearWebViewCookies() {
         val cookieManager = CookieManager.getInstance()
@@ -100,11 +150,6 @@ class UserFragment : Fragment() {
 
     private fun getUserData(): String? {
         val sharedPref = requireContext().getSharedPreferences("userData", Context.MODE_PRIVATE)
-        //val userId = sharedPref.getInt("USER_ID", -1) // 기본값 -1
-        val userNickname = sharedPref.getString("USER_NICKNAME", null)
-
-        // userId와 userNickname을 JSON 형식의 문자열로 반환
-        return userNickname
+        return sharedPref.getString("USER_NICKNAME", "알 수 없는 사용자")
     }
-
 }

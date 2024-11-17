@@ -147,7 +147,7 @@
         android:layout_height="25dp"
         android:layout_marginTop="5dp"
         android:fontFamily="@font/pretendardextrabold"
-        android:text=" 동안 대화했어요"
+        android:text=" 동안 행복했어요"
         android:textColor="@color/white"
         android:textSize="20dp"
         app:layout_constraintBottom_toBottomOf="@+id/time_dou2"
