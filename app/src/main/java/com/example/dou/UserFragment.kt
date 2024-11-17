@@ -2,6 +2,7 @@ package com.example.dou
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -27,17 +28,28 @@ class UserFragment : Fragment() {
         // Set user name
         binding.userName.text = getUserData()
 
-
         fetchUseDate()
-        fetchSentCount(1) // Always using 1 for happiness
-
+        fetchSentCount(0) // Always using 0 for happiness
 
         // Logout button
         binding.logoutBtn.setOnClickListener {
             kakaoLogout()
         }
 
+        // Open external browser on button click
+        binding.userTest.setOnClickListener {
+            openResilienceTestPage()
+        }
+
         return binding.root
+    }
+
+    private fun openResilienceTestPage() {
+        val url = "https://mymentaltest.com/resilience_test"
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            data = android.net.Uri.parse(url)
+        }
+        startActivity(intent)
     }
 
     private fun fetchUseDate() {
