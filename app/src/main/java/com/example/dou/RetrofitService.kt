@@ -46,6 +46,11 @@ interface RetrofitService {
         @Query("limit") limit: Int,
     ): Call<RecordGetResponse>
 
+    @GET("/record/{recordId}")
+    fun getRecordsByRecordId(
+        @Path("recordId") recordId: Int,
+    ): Call<RecordIdResponse>
+
     // 기록 상세 조회
     @GET("/record/{identifyId}")
     fun recordCheck(@Path("identifyId") identifyId: Int?) : Call<RecordCheckResponse>
@@ -77,8 +82,9 @@ interface RetrofitService {
     @POST("/chat")
     fun chatPost(@Body request: List<ChatRequest>) : Call<ChatResponse>
 
-    @GET("/room")
+    @GET("/room/user")
     fun getAllRooms(
+        @Query("userId") userId: Int,
         @Query("cursorId") cursorId: Int,
         @Query("limit") limit: Int) :Call<RoomListResponse>
 

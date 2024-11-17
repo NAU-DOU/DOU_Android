@@ -1,9 +1,11 @@
 package com.example.dou
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivityChatBinding
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
@@ -179,8 +181,20 @@ class ChatActivity : AppCompatActivity() {
 //        })
 //    }
 
+    private fun getUserId(): Int {
+        val sharedPref = getSharedPreferences("userData", Context.MODE_PRIVATE)
+        return sharedPref.getInt("USER_ID", -1) // 기본값 -1
+    }
+
     private fun analyzeEmotion(sentence: String) {
-        val request = EmotionRequest(userId = 0, sentence = sentence)
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
+        val request = EmotionRequest(userId = userId, sentence = sentence)
         Log.d("EmotionRequest", "Request: $request")
         val service = RetrofitApi.getRetrofitService
 
@@ -245,12 +259,19 @@ class ChatActivity : AppCompatActivity() {
 //        }
 
     private fun sendFirstSentenceToGPT(data: EmotionResult) {
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
         if (data.sentence.isNotEmpty()) {
             val reqType = determineReqType(data.sentiment_idx)
             val reqSent = determineReqSent(data.sentiment_idx)
 
             val request = GPTRequest(
-                userId = 0,
+                userId = userId,
                 context = data.sentence,
                 reqType = reqType,
                 reqSent = reqSent
@@ -291,12 +312,19 @@ class ChatActivity : AppCompatActivity() {
     }
 
     private fun sendGPTRequest(userInput: String) {
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
         // 0~6사이가 아닌 경우에 받는 내용으로는 변환받을 수 있도록
         val reqType = determineReqType(1)
         val reqSent = determineReqSent(1)
 
         val request = GPTRequest(
-            userId = 0,
+            userId = userId,
             context = userInput,
             reqType = reqType,
             reqSent = reqSent

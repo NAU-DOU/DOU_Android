@@ -492,3 +492,22 @@ data class KaKaoRefreshData(
     val ok: Boolean,
     val eid_access_token: String,
 )
+
+data class RecordIdResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: List<RecordIdResult>
+)
+
+data class RecordIdResult(
+    val recordId: Int,
+    val roomId: Int,
+    val createdAt: String,
+    val recordSummary: String,
+    val recordSent: Int,
+)

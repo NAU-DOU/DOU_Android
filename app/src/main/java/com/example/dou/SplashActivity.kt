@@ -7,6 +7,7 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import android.view.animation.AnimationUtils
+import android.webkit.CookieManager
 import androidx.appcompat.app.AppCompatActivity
 import com.example.dou.databinding.ActivitySplashBinding
 import retrofit2.Call
@@ -77,8 +78,8 @@ class SplashActivity : AppCompatActivity() {
         val accessToken = getSavedAccessToken()
         val refreshTokenCookie = "eid_refresh_token=$refreshToken"
 
-
         Log.d("SplashActivity", "Attempting token refresh with RefreshToken: $refreshTokenCookie")
+        Log.d("SplashActivity: accessToken", "$accessToken")
 
         service.postRefreshToken("Bearer $accessToken", refreshTokenCookie)
             .enqueue(object : Callback<KaKaoRefreshResponse> {
@@ -98,10 +99,14 @@ class SplashActivity : AppCompatActivity() {
                         } else {
                             Log.e("SplashActivity", "Token refresh failed. New AccessToken is null.")
                             navigateToLogin() // 토큰 갱신 실패 시 로그인 화면으로 이동
+                            clearTokens()
+                            clearWebViewCookies()
                         }
                     } else {
                         Log.e("SplashActivity", "Token refresh failed. Response: ${response.errorBody()?.string()}")
-                        navigateToLogin() // 실패 시 로그인 화면으로 이동
+                        navigateToLogin() // 토큰 갱신 실패 시 로그인 화면으로 이동
+                        clearTokens()
+                        clearWebViewCookies()
                     }
                 }
 
@@ -110,5 +115,35 @@ class SplashActivity : AppCompatActivity() {
                     navigateToLogin() // 네트워크 오류 시 로그인 화면으로 이동
                 }
             })
+
+
+    }
+
+    private fun clearTokens() {
+        val sharedPref = getSharedPreferences("authAccess", Context.MODE_PRIVATE)
+        val sharedPrefRefresh = getSharedPreferences("authRefresh", Context.MODE_PRIVATE)
+        val shared = getSharedPreferences("userData" , Context.MODE_PRIVATE)
+
+        with(shared.edit()){
+            remove("USER_NICKNAME")
+            remove("USER_ID")
+            commit()
+        }
+
+        with(sharedPref.edit()) {
+            remove("ACCESS_TOKEN")
+            commit()
+        }
+
+        with(sharedPrefRefresh.edit()) {
+            remove("REFRESH_TOKEN")
+            commit()
+        }
+    }
+
+    private fun clearWebViewCookies() {
+        val cookieManager = CookieManager.getInstance()
+        cookieManager.removeAllCookies(null)
+        cookieManager.flush()
     }
 }

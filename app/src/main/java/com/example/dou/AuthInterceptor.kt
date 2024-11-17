@@ -7,13 +7,17 @@ import okhttp3.Response
 class AuthInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val token = App.prefs.token
-        val requestBuilder = chain.request().newBuilder()
+        val originalRequest = chain.request()
+        val requestBuilder = originalRequest.newBuilder()
 
-        if (!token.isNullOrEmpty()) {
-            requestBuilder.addHeader("Authorization", token)
+        // Authorization 헤더가 이미 포함되어 있는지 확인
+        if (!token.isNullOrEmpty() && originalRequest.header("Authorization") == null) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
         }
 
-        Log.d("AuthInterceptor", "Request: ${requestBuilder.build()}")
-        return chain.proceed(requestBuilder.build())
+        val modifiedRequest = requestBuilder.build()
+        Log.d("AuthInterceptor", "Request: $modifiedRequest")
+
+        return chain.proceed(modifiedRequest)
     }
 }

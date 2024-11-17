@@ -1,5 +1,6 @@
 package com.example.dou
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -190,7 +191,14 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun analyzeEmotion(sentence: String, roomId: Int) {
-        val request = EmotionRequest(userId = 1, sentence = sentence)
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
+        val request = EmotionRequest(userId = userId, sentence = sentence)
         Log.d("EmotionRequest", "Request: $request")
 
         val disposable = RetrofitApi.getRetrofitService.emotion(request)
@@ -267,7 +275,14 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun sendGPTRequest(userInput: String, reqType: String, reqSent: String) {
-        val request = GPTRequest(userId = 0, context = userInput, reqType = reqType, reqSent = reqSent)
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
+        val request = GPTRequest(userId = userId, context = userInput, reqType = reqType, reqSent = reqSent)
         Log.d("GPTRequest", "Request: $request")
 
         val disposable = RetrofitApi.getRetrofitService.getGPTResponse(request)
@@ -319,12 +334,20 @@ class SentenceActivity : AppCompatActivity() {
     }
 
     private fun sendFirstSentenceToGPT(data: EmotionResult) {
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
+
         if (data.sentence.isNotEmpty()) {
             val reqType = determineReqType(data.sentiment_idx)
             val reqSent = determineReqSent(data.sentiment_idx)
 
             val request = GPTRequest(
-                userId = 2,
+                userId = userId,
                 context = data.sentence,
                 reqType = reqType,
                 reqSent = reqSent
@@ -378,12 +401,19 @@ class SentenceActivity : AppCompatActivity() {
                     1 // 기본값으로 1을 설정 (원하는 기본값으로 설정 가능)
                 }
 
+                val userId = getUserId()
+                if (userId != -1) {
+                    Log.d("UserData", "User ID: $userId")
+                } else {
+                    Log.d("UserData", "No User ID found in SharedPreferences")
+                }
+
                 // position에 대응하는 recordId를 가져옴
                 val recordId = recordIdMap[position] ?: (position + 1) // recordIdMap에서 가져오거나 기본값으로 position + 1 사용
 
                 // 각 메시지를 ChatRequest 객체로 변환
                 val chatRequest = ChatRequest(
-                    userId = 2, // 실제 사용자의 ID로 변경 필요
+                    userId = userId, // 실제 사용자의 ID로 변경 필요
                     roomId = roomId, // Intent에서 가져온 roomId 사용
                     recordId = recordId, // position이 아닌 생성된 recordId 사용
                     isUser = if (chatItem.isSentByMe) 1 else 0,
@@ -581,6 +611,11 @@ class SentenceActivity : AppCompatActivity() {
                 Log.e("RecordPatch", "Patch 호출 실패", t)
             }
         })
+    }
+
+    private fun getUserId(): Int {
+        val sharedPref = getSharedPreferences("userData", Context.MODE_PRIVATE)
+        return sharedPref.getInt("USER_ID", -1) // 기본값 -1
     }
 
     private fun postRecordForEmotion(roomId: Int, emotionResult: EmotionResult, position: Int) {

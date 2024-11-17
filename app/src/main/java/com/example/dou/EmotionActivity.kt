@@ -1,5 +1,6 @@
 package com.example.dou
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -251,8 +252,20 @@ class EmotionActivity : AppCompatActivity() {
         }
     }
 
+    private fun getUserId(): Int {
+        val sharedPref = getSharedPreferences("userData", Context.MODE_PRIVATE)
+        return sharedPref.getInt("USER_ID", -1) // 기본값 -1
+    }
+
     private fun addRoom(onRoomCreated: (Int) -> Unit) {
-        val request = RoomAddRequest(roomUserId = 2, roomSent = 1)
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
+        val request = RoomAddRequest(roomUserId = userId, roomSent = 1)
 
         val service = RetrofitApi.getRetrofitService
         val call = service.roomAdd(request)

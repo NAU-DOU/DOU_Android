@@ -37,6 +37,7 @@ class RecordActivity : AppCompatActivity() {
                     recordList?.let {
                         // Set up ViewPager after getting the data
                         setupViewPager(it)
+                        Log.d("RecordActivity", "RecordActivity 성공, $recordList")
                     }
                 } else {
                     Log.e("RecordActivity", "Failed to retrieve records: ${response.code()} - ${response.errorBody()?.string()}")

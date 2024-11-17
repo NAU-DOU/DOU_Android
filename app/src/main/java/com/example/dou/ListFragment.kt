@@ -1,5 +1,6 @@
 package com.example.dou
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -53,10 +54,23 @@ class ListFragment : Fragment() {
         binding.listRecycler.adapter = listAdapter
     }
 
+    private fun getUserId(): Int {
+        val sharedPref = requireContext().getSharedPreferences("userData", Context.MODE_PRIVATE)
+        return sharedPref.getInt("USER_ID", -1) // 기본값 -1
+    }
+
     // 방 리스트를 서버에서 가져오기
     private fun fetchRoomList() {
+        val userId = getUserId()
+        if (userId != -1) {
+            Log.d("UserData", "User ID: $userId")
+        } else {
+            Log.d("UserData", "No User ID found in SharedPreferences")
+        }
+
         val service = RetrofitApi.getRetrofitService  // Retrofit 인스턴스 가져오기
         val call = service.getAllRooms(
+            userId  = userId,
             cursorId = 0,
             limit = 10
         )
@@ -67,6 +81,7 @@ class ListFragment : Fragment() {
                     val roomListResponse = response.body()
                     roomListResponse?.let {
                         updateRecyclerView(it.data)
+                        Log.d( "ListFragment", "방리스트 가져오기 성공, ${it.data}")
                     }
                 } else {
                     Log.e("ListFragment", "방 리스트 가져오기 실패: ${response.code()} - ${response.errorBody()?.string()}")
