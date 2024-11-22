@@ -1,6 +1,9 @@
 package com.example.dou
 
 import android.Manifest
+import android.animation.AnimatorInflater
+import android.animation.AnimatorSet
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.ContentValues
 import android.content.Intent
@@ -18,6 +21,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.Animation
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -42,11 +48,35 @@ class HomeFragment : Fragment() {
         super.onCreate(savedInstanceState)
     }
 
+    @SuppressLint("ResourceType")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         // Check and request necessary permissions
         requestAudioPermission()
+
+//        // Dou 이미지에 애니메이션 적용
+//        val douImageView = binding.homeRecord
+//        val animator = AnimatorInflater.loadAnimator(requireContext(), R.anim.bouce) as AnimatorSet
+//        animator.setTarget(douImageView)
+//        animator.start()
+//
+//        // Dot들에 애니메이션 적용
+//        val dot1 = binding.dot1
+//        val dot2 = binding.dot2
+//
+//        val dotAnimator1 = AnimatorInflater.loadAnimator(requireContext(), R.anim.bouce) as AnimatorSet
+//        dotAnimator1.setTarget(dot1)
+//        dotAnimator1.start()
+//
+//        val dotAnimator2 = AnimatorInflater.loadAnimator(requireContext(), R.anim.bouce) as AnimatorSet
+//        dotAnimator2.setTarget(dot2)
+//        dotAnimator2.start()
+
+        // 각 애니메이션에 다른 시작 시간을 적용
+        startBounceAnimation(binding.homeRecord, R.anim.bouce, 0) // 바로 시작
+        startBounceAnimation(binding.dot1, R.anim.bouce, 150)    // 150ms 딜레이
+        startBounceAnimation(binding.dot2, R.anim.bouce, 300)    // 300ms 딜레이
     }
 
     private fun requestAudioPermission() {
@@ -87,6 +117,7 @@ class HomeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         binding = FragmentHomeBinding.inflate(inflater, container, false)
+
 
         // 랜덤한 텍스트 선택
         val randomIndex = (randomTexts.indices).random()
@@ -469,4 +500,15 @@ class HomeFragment : Fragment() {
         }
         return spannableString
     }
+
+    private fun startBounceAnimation(view: View, animationResId: Int, delay: Long) {
+        // AnimatorSet 객체 생성
+        val animator = AnimatorInflater.loadAnimator(requireContext(), animationResId) as AnimatorSet
+
+        // 딜레이 설정
+        animator.startDelay = delay
+        animator.setTarget(view)
+        animator.start()
+    }
+
 }

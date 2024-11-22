@@ -1,5 +1,10 @@
 package com.example.dou
 
+import android.animation.Animator
+import android.animation.AnimatorInflater
+import android.animation.AnimatorSet
+import android.animation.ObjectAnimator
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
@@ -7,6 +12,7 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -19,6 +25,20 @@ class ListFragment : Fragment() {
     private lateinit var binding: FragmentListBinding
     private val listItem = arrayListOf<ListItem>()
     private lateinit var listAdapter: ListAdapter
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+
+        val douImageView = binding.listDou
+
+        // 애니메이션 설정
+        startBouncingAndFlippingAnimation(douImageView)
+//        val animator = AnimatorInflater.loadAnimator(requireContext(), R.anim.bouce) as AnimatorSet
+//        animator.setTarget(douImageView)
+//        animator.start()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -108,5 +128,66 @@ class ListFragment : Fragment() {
             listItem.add(newListItem)
         }
         listAdapter.notifyDataSetChanged()  // 어댑터에 변경 사항을 알려줌
+    }
+
+    @SuppressLint("ResourceType")
+    private fun startBouncingAndFlippingAnimation(imageView: ImageView) {
+        val distance = 300f // 이동 거리
+
+        // 왼쪽으로 상대적 이동 애니메이션
+        val moveLeft = ObjectAnimator.ofFloat(imageView, "translationX", 0f, -distance).apply {
+            duration = 3000
+        }
+
+        // 오른쪽으로 상대적 이동 애니메이션
+        val moveRight = ObjectAnimator.ofFloat(imageView, "translationX", -distance, 0f).apply {
+            duration = 3000
+        }
+
+        // 통통 튀는 애니메이션 (Y축)
+        val bounce = ObjectAnimator.ofFloat(imageView, "translationY", 0f, -10f, 0f).apply {
+            duration = 500
+            repeatCount = 6 // 이동 중 6번 튀기
+            repeatMode = ObjectAnimator.RESTART
+        }
+
+        // 이미지 뒤집기 (왼쪽 -> 오른쪽)
+        val flipToRight = ObjectAnimator.ofFloat(imageView, "scaleX", -1f).apply {
+            duration = 0 // 즉시 실행
+        }
+
+        // 이미지 뒤집기 (오른쪽 -> 왼쪽)
+        val flipToLeft = ObjectAnimator.ofFloat(imageView, "scaleX", 1f).apply {
+            duration = 0 // 즉시 실행
+        }
+
+        // 왼쪽 이동 + 통통 튀기
+        val leftSet = AnimatorSet().apply {
+            playTogether(moveLeft, bounce.clone()) // 이동 중에 튀기
+        }
+
+        // 오른쪽 이동 + 통통 튀기
+        val rightSet = AnimatorSet().apply {
+            playTogether(moveRight, bounce.clone()) // 이동 중에 튀기
+        }
+
+        // 애니메이션 순서 정의
+        val animatorSet = AnimatorSet().apply {
+            playSequentially(
+                leftSet,       // 왼쪽으로 이동
+                flipToRight,   // 이미지 뒤집기 (오른쪽 보기)
+                rightSet,      // 오른쪽으로 이동
+                flipToLeft     // 이미지 뒤집기 (왼쪽 보기)
+            )
+        }
+
+        // 애니메이션 무한 반복
+        animatorSet.addListener(object : android.animation.AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                animatorSet.start() // 애니메이션 다시 시작
+            }
+        })
+
+        animatorSet.start()
     }
 }

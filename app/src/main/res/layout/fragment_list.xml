@@ -36,11 +36,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"/>
 
+            <View
+                android:layout_width="325dp"
+                android:layout_height="144dp"
+                android:background="@drawable/back_img"
+                app:layout_constraintTop_toBottomOf="@id/list_dou"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="-70dp"/>
+
             <ImageView
                 android:id="@+id/list_dou"
                 android:layout_marginTop="30dp"
                 app:layout_constraintTop_toBottomOf="@id/user_title"
-                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginEnd="70dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 android:layout_width="100dp"
                 android:layout_height="120dp"

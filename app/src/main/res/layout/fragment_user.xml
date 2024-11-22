@@ -20,7 +20,7 @@
         android:textSize="30dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"></TextView>
+        app:layout_constraintTop_toTopOf="parent"/>
 
     <TextView
         android:id="@+id/user_name"
@@ -35,7 +35,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/user_title"></TextView>
+        app:layout_constraintTop_toBottomOf="@id/user_title"/>
 
     <TextView
         android:id="@+id/user_des2"
@@ -51,7 +51,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toEndOf="@id/user_name"
         app:layout_constraintTop_toBottomOf="@id/user_title"
-        app:layout_constraintVertical_bias="0.0"></TextView>
+        app:layout_constraintVertical_bias="0.0"/>
 
     <TextView
         android:id="@+id/user_des3"
@@ -63,7 +63,7 @@
         android:textSize="20dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/user_name"></TextView>
+        app:layout_constraintTop_toBottomOf="@id/user_name"/>
 
     <ImageView
         android:id="@+id/line"
@@ -154,7 +154,24 @@
         app:layout_constraintStart_toEndOf="@+id/time_dou2"
         app:layout_constraintTop_toBottomOf="@id/day_dou3" />
 
+
+    <TextView
+        app:layout_constraintEnd_toEndOf="parent"
+        android:id="@+id/tv_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:fontFamily="@font/pretendardregular"
+        android:layout_marginBottom="5dp"
+        android:text="*해당 테스트는 참고용이며, 결과는 가볍게 즐겨주세요!"
+        android:textColor="#C4FFFFFF"
+        android:textSize="13dp"
+        app:layout_constraintBottom_toTopOf="@id/user_test"
+        app:layout_constraintStart_toStartOf="parent"
+        />
+
     <Button
+        android:layout_marginBottom="15dp"
         android:id="@+id/user_test"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
