@@ -36,7 +36,7 @@ class RecordActivity : AppCompatActivity() {
                     val recordList = response.body()?.data
                     recordList?.let {
                         // Set up ViewPager after getting the data
-                        setupViewPager(it)
+                        setupViewPager(it.reversed())
                         Log.d("RecordActivity", "RecordActivity 성공, $recordList")
                     }
                 } else {
