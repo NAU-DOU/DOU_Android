@@ -165,14 +165,17 @@ class EmotionActivity : AppCompatActivity() {
         val apiKey = BuildConfig.API_KEY
         Log.d("apikey", apiKey)
 
+        Log.d("userInput", "userInput: $userInput")
+
         val arr = JSONArray()
         val baseAi = JSONObject()
         val userMsg = JSONObject()
         try {
             baseAi.put("role", "user")
-            baseAi.put("content", "단순히 내가 요청한 정보만 제공해주면 돼. 1, 2, 3 이런 식으로 안 나눠도 되고 요약도 안해도 돼 그냥 내가 보낸 문장들을 문단으로 나눠줘 그리고 문단의 뒤에 \n을 붙여서 표현해줬으면 좋겠어, 문장을 ''로 묶지 말아줘 그냥 문단의 뒤에 \n만 붙여줘")
+            baseAi.put("content", "주어진 문장을 문단으로 나누세요. 의미 있는 문장이 끝날 때만 줄바꿈(\\n)을 추가하고, 빈 문단은 포함하지 마세요. 다른 설명은 하지 마세요.")
+
             userMsg.put("role", "user")
-            userMsg.put("content", "$userInput \n 라는 글을 문단으로 나눠주고 문단의 뒤에 \n을 붙여줘")
+            userMsg.put("content", "$userInput\n위 문장을 문단으로 나누세요. 빈 문단은 포함하지 마세요.")
 
             arr.put(baseAi)
             arr.put(userMsg)
@@ -206,11 +209,18 @@ class EmotionActivity : AppCompatActivity() {
                                 val jsonObject = JSONObject(it)
                                 val jsonArray = jsonObject.getJSONArray("choices")
                                 if (jsonArray.length() > 0) {
-                                    val content = jsonArray.getJSONObject(0).getJSONObject("message").getString("content")
+                                    var content = jsonArray.getJSONObject(0).getJSONObject("message").getString("content")
 
-                                    Log.d("Paragraph Result", content)
+                                    // Clean paragraphs to remove empty lines
+                                    content = cleanParagraphs(content) // 여기에 cleanParagraphs 호출
+
+                                    Log.d("Paragraph Result", "Paragraph Result:  $content")
 
                                     handleResponse(content, userInput, roomId)
+
+//                                    Log.d("Paragraph Result", "Paragraph Result:  $content")
+//
+//                                    handleResponse(content, userInput, roomId)
                                 } else {
                                     Log.e("API Communication", "No choices found in response.")
                                     Toast.makeText(this@EmotionActivity, "응답에서 선택지를 찾을 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -296,4 +306,12 @@ class EmotionActivity : AppCompatActivity() {
             }
         })
     }
+
+    private fun cleanParagraphs(rawOutput: String): String {
+        // 줄바꿈(\n) 기준으로 분리하고, 빈 문장 제거
+        return rawOutput.lines()
+            .filter { it.isNotBlank() } // 빈 줄 제거
+            .joinToString("\n") // 다시 합치기
+    }
+
 }

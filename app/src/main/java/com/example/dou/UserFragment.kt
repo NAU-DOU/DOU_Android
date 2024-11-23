@@ -45,12 +45,18 @@ class UserFragment : Fragment() {
     }
 
     private fun openResilienceTestPage() {
-        val url = "https://mymentaltest.com/resilience_test"
+        val url = "https://www.ust.ac.kr/kor/sub05_03_02_02.do"
         val intent = Intent(Intent.ACTION_VIEW).apply {
-            data = android.net.Uri.parse(url)
+            data = Uri.parse(url)
         }
-        startActivity(intent)
+        try {
+            startActivity(intent)
+            Log.d("UserFragment", "Opening URL: $url")
+        } catch (e: Exception) {
+            Log.e("UserFragment", "Failed to open URL: $url, Error: ${e.message}")
+        }
     }
+
 
     private fun fetchUseDate() {
         val service = RetrofitApi.getRetrofitService
