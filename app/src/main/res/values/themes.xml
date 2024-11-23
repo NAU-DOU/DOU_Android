@@ -3,7 +3,15 @@
     <style name="Base.Theme.DOU" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+
+        <!-- 스플래시 화면 제거 -->
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@null</item>
+        <item name="postSplashScreenTheme">@style/Theme.DOU</item>
     </style>
 
-    <style name="Theme.DOU" parent="Base.Theme.DOU" />
+    <!-- Application theme -->
+    <style name="Theme.DOU" parent="Base.Theme.DOU">
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
 </resources>

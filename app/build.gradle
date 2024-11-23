@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.dou"
-        minSdk 29
+        minSdk 31
         targetSdk 34
         versionCode 1
         versionName "1.0"
@@ -114,4 +114,6 @@ dependencies {
     implementation "io.reactivex.rxjava3:rxandroid:3.0.2"
     implementation 'com.squareup.retrofit2:adapter-rxjava3:2.11.0' // 적절한 버전으로 교체
 
+
+    implementation "androidx.core:core-splashscreen:1.0.0"
 }
