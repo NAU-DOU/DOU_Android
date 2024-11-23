@@ -87,8 +87,8 @@ class UserFragment : Fragment() {
         service.postSentCount(request).enqueue(object : Callback<PostSentCountResponse> {
             override fun onResponse(call: Call<PostSentCountResponse>, response: Response<PostSentCountResponse>) {
                 if (response.isSuccessful) {
-                    val useSent = response.body()?.useSent ?: "알 수 없음"
-                    val sentCount = response.body()?.sentCount ?: 0
+                    val useSent = response.body()?.data?.useSent ?: "알 수 없음"
+                    val sentCount = response.body()?.data?.sentCount ?: 0
                     Log.d("UserFragment", "UseSent: $useSent, SentCount: $sentCount")
 
                     // Update UI with sentiment count

@@ -531,7 +531,18 @@ data class PostSentCountRequest(
     val sentCode: Int
 )
 
-data class PostSentCountResponse(
+data class PostSentCountData(
     val useSent: String,
     val sentCount: Int
+)
+
+data class PostSentCountResponse(
+    @SerializedName("status")
+    val status: Int,
+    @SerializedName("code")
+    val code: String,
+    @SerializedName("message")
+    val message: String,
+    @SerializedName("data")
+    val data: PostSentCountData
 )
