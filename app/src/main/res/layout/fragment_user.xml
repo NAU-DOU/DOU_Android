@@ -47,11 +47,9 @@
         android:textColor="@color/white"
         android:textSize="20dp"
         app:layout_constraintBottom_toTopOf="@id/user_des3"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+
         app:layout_constraintStart_toEndOf="@id/user_name"
-        app:layout_constraintTop_toBottomOf="@id/user_title"
-        app:layout_constraintVertical_bias="0.0"/>
+        />
 
     <TextView
         android:id="@+id/user_des3"
@@ -60,7 +58,7 @@
         android:fontFamily="@font/pretendardextrabold"
         android:text="도우와 함께하는 하루는 어떠신가요?"
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/user_name"/>
@@ -83,7 +81,7 @@
         android:fontFamily="@font/pretendardextrabold"
         android:text="DOU와 "
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="@+id/day_dou2"
         app:layout_constraintEnd_toStartOf="@id/day_dou2"
         app:layout_constraintStart_toStartOf="parent"
@@ -100,7 +98,7 @@
         android:textSize="25dp"
         app:layout_constraintEnd_toStartOf="@id/day_dou3"
         app:layout_constraintStart_toEndOf="@id/day_dou"
-        app:layout_constraintTop_toBottomOf="@id/line" />
+        app:layout_constraintBottom_toBottomOf="@id/day_dou"/>
 
     <TextView
         android:id="@+id/day_dou3"
@@ -110,7 +108,7 @@
         android:fontFamily="@font/pretendardextrabold"
         android:text=" 동안 함께했어요"
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="@+id/day_dou2"
         app:layout_constraintStart_toEndOf="@+id/day_dou2"
         app:layout_constraintTop_toBottomOf="@id/line" />
@@ -120,11 +118,11 @@
         android:id="@+id/time_dou"
         android:layout_width="wrap_content"
         android:layout_height="25dp"
-        android:layout_marginTop="5dp"
+        android:layout_marginTop="10dp"
         android:fontFamily="@font/pretendardextrabold"
         android:text="DOU와 "
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="@+id/time_dou2"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/day_dou" />
@@ -139,7 +137,7 @@
         android:textSize="25dp"
         app:layout_constraintEnd_toStartOf="@id/time_dou3"
         app:layout_constraintStart_toEndOf="@id/time_dou"
-        app:layout_constraintTop_toBottomOf="@id/day_dou2" />
+        app:layout_constraintBottom_toBottomOf="@id/time_dou"/>
 
     <TextView
         android:id="@+id/time_dou3"
@@ -149,7 +147,7 @@
         android:fontFamily="@font/pretendardextrabold"
         android:text=" 동안 행복했어요"
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:layout_constraintBottom_toBottomOf="@+id/time_dou2"
         app:layout_constraintStart_toEndOf="@+id/time_dou2"
         app:layout_constraintTop_toBottomOf="@id/day_dou3" />
@@ -165,7 +163,7 @@
         android:layout_marginBottom="5dp"
         android:text="*해당 테스트는 참고용이며, 결과는 가볍게 즐겨주세요!"
         android:textColor="#C4FFFFFF"
-        android:textSize="13dp"
+        android:textSize="11dp"
         app:layout_constraintBottom_toTopOf="@id/user_test"
         app:layout_constraintStart_toStartOf="parent"
         />
@@ -180,7 +178,7 @@
         android:padding="10dp"
         android:text="회복 탄력성 테스트하러 가기"
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         app:backgroundTint="#56585C"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -204,7 +202,7 @@
             android:fontFamily="@font/pretendardmedium"
             android:text="로그아웃 하시겠습니까?"
             android:textColor="@color/white"
-            android:textSize="15dp"
+            android:textSize="13dp"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@id/logout_btn"
             app:layout_constraintStart_toStartOf="parent"
@@ -218,7 +216,7 @@
             android:fontFamily="@font/pretendardmedium"
             android:text="로그아웃하기"
             android:textColor="@color/point_color"
-            android:textSize="15dp"
+            android:textSize="13dp"
             app:layout_constraintStart_toEndOf="@id/logout_txt"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"

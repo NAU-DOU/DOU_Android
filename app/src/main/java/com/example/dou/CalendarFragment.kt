@@ -104,7 +104,7 @@ class CalendarFragment : Fragment() {
 
     private fun fetchRoomData(calItems: ArrayList<CalItem>, calAdapter: CalAdapter) {
         val userId = getUserId()
-        val limit = 31 // Maximum number of days in a month
+        val limit = 1000 // Maximum number of days in a month
 
         RetrofitApi.getRetrofitService.getAllRooms(userId = userId, cursorId = 0, limit = limit)
             .enqueue(object : Callback<RoomListResponse> {
