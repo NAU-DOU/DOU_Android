@@ -80,17 +80,17 @@ class ChatActivity : AppCompatActivity() {
                     if (summaryResponse != null) {
 
                         val response = summaryResponse.data
-                        Log.d("SummaryResponse", "Summary: ${response.summary}")
+                        Log.d("SummaryResponse2", "Summary: ${response.response}")
 
-                        receiveMessage("\'${response.summary}\'" + "라는 대화를 했네")
+                        receiveMessage("\'${response.response}\'" + "라는 대화를 했네")
                     }
                 } else {
-                    Log.e("SummaryAPI", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
+                    Log.e("SummaryAPI2", "API 호출 실패: ${response.code()} - ${response.errorBody()?.string()}")
                 }
             }
 
             override fun onFailure(call: Call<SummaryResponse>, t: Throwable) {
-                Log.e("SummaryAPI", "API 호출 실패", t)
+                Log.e("SummaryAPI2", "API 호출 실패", t)
             }
         })
     }
@@ -128,9 +128,9 @@ class ChatActivity : AppCompatActivity() {
             val receivedMessage = Message("0", message)
             messageList.add(receivedMessage)
 
-            Log.d("MessageList", "All Messages:")
+            Log.d("MessageList", "All Messages2:")
             for (msg in messageList) {
-                Log.d("MessageList", "${msg.sentBy}, ${msg.message}")
+                Log.d("MessageList2at", "${msg.sentBy}, ${msg.message}")
             }
         }
     }

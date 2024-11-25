@@ -33,15 +33,6 @@
         <activity
             android:name=".LoginActivity"
             android:exported="false">
-<!--            <intent-filter>-->
-<!--                <action android:name="android.intent.action.VIEW" />-->
-<!--                <category android:name="android.intent.category.DEFAULT" />-->
-<!--                <category android:name="android.intent.category.BROWSABLE" />-->
-<!--                <data-->
-<!--                    android:scheme="myapp"-->
-<!--                    android:host="dev.nau-dou.shop"-->
-<!--                    android:pathPrefix="/oauth/kakao/callback" />-->
-<!--            </intent-filter>-->
         </activity>
         <activity
             android:name=".RecordActivity"

@@ -42,7 +42,7 @@
             android:text="그동안의 감정을\n확인해보고 내 감정을 인지해보자!"
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/white"
-            android:textSize="20dp">
+            android:textSize="15sp">
         </TextView>
 
         <androidx.recyclerview.widget.RecyclerView
@@ -89,7 +89,7 @@
                 android:fontFamily="@font/pretendardextrabold"
                 android:text="감정 대화"
                 android:textColor="@color/point_color"
-                android:textSize="20dp"
+                android:textSize="15sp"
                 app:layout_constraintEnd_toStartOf="@id/cal_txt2"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -100,7 +100,7 @@
                 android:fontFamily="@font/pretendardextrabold"
                 android:text=" 읽어보기"
                 android:textColor="@color/white"
-                android:textSize="20dp"
+                android:textSize="15sp"
                 app:layout_constraintStart_toEndOf="@id/cal_txt"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -133,7 +133,7 @@
                 android:fontFamily="@font/pretendardextrabold"
                 android:text="캘린더를 클릭해서"
                 android:textColor="@color/white"
-                android:textSize="20dp"
+                android:textSize="15sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/cal_dou" />
@@ -146,7 +146,7 @@
                 android:text="그날의 감정을 확인해보자!"
                 android:gravity="center"
                 android:textColor="@color/point_color"
-                android:textSize="20dp"
+                android:textSize="15sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/dou_txt" />

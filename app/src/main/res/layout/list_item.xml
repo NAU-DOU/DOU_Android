@@ -17,7 +17,7 @@
         android:fontFamily="@font/pretendardextrabold"
         android:text="#1"
         android:textColor="@color/white"
-        android:textSize="20dp"
+        android:textSize="15dp"
         />
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -39,7 +39,7 @@
             android:fontFamily="@font/pretendardmedium"
             android:text="대화 한 문장 요약 or 날짜"
             android:textColor="@color/white"
-            android:textSize="15dp"
+            android:textSize="13dp"
             />
 
     </androidx.constraintlayout.widget.ConstraintLayout>

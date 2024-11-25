@@ -34,7 +34,7 @@
         android:text="오늘의 감정을 \n심리 치료 도우미 ‘도우’에게 말해줘!"
         android:fontFamily="@font/pretendardextrabold"
         android:textColor="@color/white"
-        android:textSize="20dp">
+        android:textSize="15dp">
     </TextView>
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -48,7 +48,7 @@
         app:layout_constraintEnd_toEndOf="parent">
 
         <View
-            android:layout_width="325dp"
+            android:layout_width="300dp"
             android:layout_height="144dp"
             android:background="@drawable/back_img"
             app:layout_constraintTop_toBottomOf="@id/home_record"
@@ -97,6 +97,8 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:visibility="visible"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 android:id="@+id/record_des_layout_first"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
@@ -112,7 +114,7 @@
                     android:text="나를 누르면 이야기를 "
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/white"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
                 <TextView
@@ -126,7 +128,7 @@
                     android:text="시작"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/point_color"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
                 <TextView
@@ -140,7 +142,7 @@
                     android:text="할 수 있어!"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/white"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -169,7 +171,7 @@
                     android:text="~나랑 대화중 ~"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/point_color"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
 
@@ -198,7 +200,7 @@
                     android:text="오늘의 감정 기록을 완료했어!"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/point_color"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
                 <TextView
@@ -212,7 +214,7 @@
                     android:text="너의 감정 기록을 보러갈래?"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/white"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -239,7 +241,7 @@
                     android:text="잠시 녹음을 일시정지했어!"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/point_color"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
                 <TextView
@@ -253,7 +255,7 @@
                     android:text="나를 다시 눌러서 녹음을 시작해봐"
                     android:fontFamily="@font/pretendardextrabold"
                     android:textColor="@color/white"
-                    android:textSize="20dp">
+                    android:textSize="15dp">
                 </TextView>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -275,7 +277,7 @@
             android:padding="10dp"
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/white"
-            android:textSize="20dp">
+            android:textSize="15dp">
         </Button>
 
         <Button
@@ -294,7 +296,7 @@
             android:padding="10dp"
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/white"
-            android:textSize="20dp">
+            android:textSize="15dp">
         </Button>
 
         <Button
@@ -313,7 +315,7 @@
             android:padding="10dp"
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/white"
-            android:textSize="20dp">
+            android:textSize="15dp">
         </Button>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
@@ -334,19 +336,19 @@
             android:padding="25dp"
             android:text="“도우는 오늘 피자 도우를 먹었어\n 넌 맛있는 밥 먹었어?”"
             android:textColor="@color/white"
-            android:textSize="20dp"
+            android:textSize="15dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"></TextView>
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <ImageView
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginTop="4dp"
-            android:layout_width="90dp"
-            android:layout_height="100dp"
+            android:layout_width="70dp"
+            android:layout_height="90dp"
             android:src="@drawable/home_dou">
         </ImageView>
 

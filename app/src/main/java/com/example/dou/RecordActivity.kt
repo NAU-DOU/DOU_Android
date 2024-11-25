@@ -28,7 +28,7 @@ class RecordActivity : AppCompatActivity() {
     private fun fetchRecordsByRoomId(roomId: Int) {
         val service = RetrofitApi.getRetrofitService
         val call = service.getRecordsByRoomId(
-            roomId, cursorId = 0, limit = 10)
+            roomId, cursorId = 0, limit = 50)
 
         call.enqueue(object : Callback<RecordGetResponse> {
             override fun onResponse(call: Call<RecordGetResponse>, response: Response<RecordGetResponse>) {

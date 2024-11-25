@@ -7,12 +7,16 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.dou.databinding.ActivitySentenceBinding
 import com.google.gson.Gson
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import model.Message
 import retrofit2.Call
 import retrofit2.Callback
@@ -80,7 +84,8 @@ class SentenceActivity : AppCompatActivity() {
             analyzeEmotion(sentences,roomId)
 
             // 전체 대화 내용 요약을 위해서 summary 시도하기
-            summaryChat(originalSentences,roomId)
+            //summaryChat(originalSentences,roomId)
+            Log.d("summaryChat", "originalSentences: $originalSentences")
         } else {
             Log.d("ChatActivity", "Sentences is null")
         }
@@ -127,7 +132,7 @@ class SentenceActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     // API 요청이 성공한 경우
                     val summaryResponse = response.body()
-                    val roomSummaryResult = summaryResponse?.data?.summary
+                    val roomSummaryResult = summaryResponse?.data?.response
 
                     /* TODO
                     *   1) API 요청 후 받은 요약 내용을 가지고 감정 분석 실시 2) 감정 분석 후 sentiment를 가지고 다시 해당 room의 sentiment를 조절해야 함*/
@@ -235,10 +240,15 @@ class SentenceActivity : AppCompatActivity() {
                     conversationHistoryMap[0] = mutableListOf()
                 }
 
-                // RecordPost를 각 emotionDataList에 대해 실행
-                emotionDataList.forEachIndexed { index, emotionResult ->
-                    postRecordForEmotion(roomId, emotionResult, index) // index를 position으로 전달
+//                // RecordPost를 각 emotionDataList에 대해 실행
+//                emotionDataList.forEachIndexed { index, emotionResult ->
+//                    postRecordForEmotion(roomId, emotionResult, index) // index를 position으로 전달
+//                }
+
+                lifecycleScope.launch(Dispatchers.IO) {
+                    postRecordForEmotion(roomId, emotionDataList)
                 }
+
 
                 val finalSentiment = emotionDataList.lastOrNull()?.sentiment_idx ?: 0
                 roomPatchSentiment(roomId, finalSentiment)
@@ -353,7 +363,6 @@ class SentenceActivity : AppCompatActivity() {
             Log.d("UserData", "No User ID found in SharedPreferences")
         }
 
-
         if (data.sentence.isNotEmpty()) {
             val reqType = determineReqType(data.sentiment_idx)
             val reqSent = determineReqSent(data.sentiment_idx)
@@ -392,7 +401,7 @@ class SentenceActivity : AppCompatActivity() {
                     }
                 }, { error ->
                     isApiRequestInProgress = false
-                    Log.e("API Communication_First", "API 요청 실패", error)
+//                    Log.e("API Communication_First", "API 요청 실패", error)
                     Toast.makeText(this@SentenceActivity, "API 요청 실패", Toast.LENGTH_SHORT).show()
                     retrySendGPTRequest(data.sentence, reqType, reqSent) // 실패 시 재시도
                 })
@@ -469,29 +478,6 @@ class SentenceActivity : AppCompatActivity() {
                 // 네트워크 오류 등 요청 실패 시 처리 로직 추가
             }
         })
-    }
-
-
-    private fun determineReqType(sentiment: Int): String {
-        return when (sentiment) {
-            0 -> "HAPPY_RESPONSE"
-            1, 2 -> "COMMON_RESPONSE"
-            3, 4, 5, 6 -> "SENTIMENT_RESPONSE"
-            else -> "TRANSFORM_CONFIRM"
-        }
-    }
-
-    private fun determineReqSent(sentiment: Int): String {
-        return when (sentiment) {
-            0 -> "행복"
-            1 -> "놀람"
-            2 -> "중립"
-            3 -> "슬픔"
-            4 -> "꺼림"
-            5 -> "분노"
-            6 -> "두려움"
-            else -> "알 수 없음"
-        }
     }
 
     private var currentConversation: String? = null
@@ -630,35 +616,47 @@ class SentenceActivity : AppCompatActivity() {
         return sharedPref.getInt("USER_ID", -1) // 기본값 -1
     }
 
-    private fun postRecordForEmotion(roomId: Int, emotionResult: EmotionResult, position: Int) {
-        val request = RecordPostRequest(
-            roomId = roomId
-        )
-
+    private suspend fun postRecordForEmotion(roomId: Int, emotionResults: List<EmotionResult>) {
         val service = RetrofitApi.getRetrofitService
-        val call = service.recordPost(request)
+        emotionResults.forEachIndexed { index, emotionResult ->
+            val postResponse = service.recordPost(RecordPostRequest(roomId = roomId)).execute()
+            val recordId = postResponse.body()?.data?.recordId
 
-        call.enqueue(object : Callback<RecordPostResponse> {
-            override fun onResponse(call: Call<RecordPostResponse>, response: Response<RecordPostResponse>) {
-                if (response.isSuccessful) {
-                    val recordResponse = response.body()
-                    recordResponse?.let {
-                        Log.d("RecordPost", "Record 생성 성공: ${it.data}")
-
-                        // 생성된 recordId를 recordIdMap에 저장
-                        recordIdMap[position] = it.data.recordId
-
-                        // 생성된 recordId로 recordPatch를 통해 sentiment와 summary를 설정
-                        patchRecord(it.data.recordId, emotionResult.sentiment_idx, emotionResult.sentence)
-                    }
-                } else {
-                    Log.e("RecordPost", "Record 생성 실패: ${response.code()} - ${response.errorBody()?.string()}")
-                }
+            if (recordId != null) {
+                recordIdMap[index] = recordId // recordId 저장
+                service.recordPatch(
+                    RecordPatchRequest(
+                        recordId = recordId,
+                        recordSent = emotionResult.sentiment_idx,
+                        recordSummary = emotionResult.sentence
+                    )
+                ).execute()
+                Log.d("RecordPatch", "Record $recordId patched for position $index")
             }
-
-            override fun onFailure(call: Call<RecordPostResponse>, t: Throwable) {
-                Log.e("RecordPost", "Record 생성 실패", t)
-            }
-        })
+        }
     }
+
+    private fun determineReqType(sentiment: Int): String {
+        return when (sentiment) {
+            0 -> "HAPPY_RESPONSE"
+            1, 2 -> "COMMON_RESPONSE"
+            3, 4, 5, 6 -> "SENTIMENT_RESPONSE"
+            else -> "TRANSFORM_CONFIRM"
+        }
+    }
+
+    private fun determineReqSent(sentiment: Int): String {
+        return when (sentiment) {
+            0 -> "행복"
+            1 -> "놀람"
+            2 -> "중립"
+            3 -> "슬픔"
+            4 -> "꺼림"
+            5 -> "분노"
+            6 -> "두려움"
+            else -> "알 수 없음"
+        }
+    }
+
+
 }

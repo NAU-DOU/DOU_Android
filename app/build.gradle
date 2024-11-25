@@ -20,7 +20,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField "String","API_KEY",properties['api_key']
 
-        buildConfigField "String","STT_API_KEY",properties['stt_api_key']
+        buildConfigField "String","STT_SECRET_KEY",properties['stt_secret_key']
         buildConfigField "String", "INVOKE_URL", properties['stt_invoke_url']
 
         buildConfigField "String", "STT_CLIENT_ID", properties['stt_client_id']
@@ -116,4 +116,7 @@ dependencies {
 
 
     implementation "androidx.core:core-splashscreen:1.0.0"
+
+    implementation "com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.11"
+
 }

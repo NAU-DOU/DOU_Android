@@ -184,7 +184,7 @@ data class SummaryResponse(
     @SerializedName("status")
     val status: Int,
     @SerializedName("code")
-    val code: Int,
+    val code: String,
     @SerializedName("message")
     val message: String,
     @SerializedName("data")
@@ -192,8 +192,8 @@ data class SummaryResponse(
 )
 
 data class SummaryData(
-    @SerializedName("summary")
-    val summary: String
+    @SerializedName("response")
+    val response: String
 )
 
 // GPT와의 대화

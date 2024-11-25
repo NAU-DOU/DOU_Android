@@ -40,7 +40,7 @@ class EmotionActivity : AppCompatActivity() {
     private val client = OkHttpClient()
 
     private val apiKey: String by lazy {
-        BuildConfig.STT_API_KEY
+        BuildConfig.STT_SECRET_KEY
     }
 
     private val invokeUrl: String by lazy {
@@ -96,7 +96,7 @@ class EmotionActivity : AppCompatActivity() {
     private fun recognizeSpeechFromContent(contentUri: Uri) {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                // Content URI로부터 파일 데이터를 가져오기
+                // Content URI에서 파일 가져오기
                 val inputStream = contentResolver.openInputStream(contentUri)
                 inputStream?.use { stream ->
                     val tempFile = File.createTempFile("audio_", ".mp3", cacheDir) // 임시 파일 생성
@@ -104,7 +104,7 @@ class EmotionActivity : AppCompatActivity() {
                         stream.copyTo(outputStream)
                     }
 
-                    // Multipart로 파일 준비
+                    // 바이너리 데이터 준비
                     val requestFile = tempFile.asRequestBody("application/octet-stream".toMediaTypeOrNull())
                     val body = MultipartBody.Part.createFormData("media", tempFile.name, requestFile)
 
@@ -117,8 +117,22 @@ class EmotionActivity : AppCompatActivity() {
                 """.trimIndent()
                     val params = paramsJson.toRequestBody("application/json".toMediaTypeOrNull())
 
-                    // API 호출 (서버로 파일 전송)
+                    // Retrofit 호출 (요청 전 로그 출력)
                     val call = naverSpeechService.recognizeSpeech(body, params, apiKey)
+
+                    // 요청 URL 로그 출력
+                    Log.d("Request URL", call.request().url.toString())
+
+                    // 요청 헤더 로그 출력
+                    Log.d("Request Headers", call.request().headers.toString())
+
+                    // 요청 본문 로그 출력 (주의: 바이너리 데이터는 내용이 크므로 체크)
+                    val buffer = okio.Buffer()
+                    call.request().body?.writeTo(buffer)
+                    Log.d("Request Body", "Body size: ${buffer.size}")
+                    Log.d("Request Body (Partial)", buffer.readUtf8().take(500)) // 앞 500자만 로그
+
+                    // 실제 API 호출
                     call.enqueue(object : Callback<SpeechResponse> {
                         override fun onFailure(call: Call<SpeechResponse>, t: Throwable) {
                             Log.e("NaverSTT", "Failed to recognize speech", t)
@@ -130,6 +144,7 @@ class EmotionActivity : AppCompatActivity() {
                         override fun onResponse(call: Call<SpeechResponse>, response: Response<SpeechResponse>) {
                             if (response.isSuccessful) {
                                 val responseBody = response.body()
+                                Log.d("Response,Naver", "Response: $response")
                                 val originalSentences = responseBody?.text ?: ""
                                 Log.d("NaverSTT", "Response: $originalSentences")
 
@@ -161,6 +176,7 @@ class EmotionActivity : AppCompatActivity() {
         }
     }
 
+
     private fun sendGPTParagraphMessage(userInput: String, roomId: Int) {
         val apiKey = BuildConfig.API_KEY
         Log.d("apikey", apiKey)
@@ -171,11 +187,16 @@ class EmotionActivity : AppCompatActivity() {
         val baseAi = JSONObject()
         val userMsg = JSONObject()
         try {
-            baseAi.put("role", "user")
-            baseAi.put("content", "주어진 문장을 문단으로 나누세요. 의미 있는 문장이 끝날 때만 줄바꿈(\\n)을 추가하고, 빈 문단은 포함하지 마세요. 다른 설명은 하지 마세요.")
+            try {
+                baseAi.put("role", "user")
+                baseAi.put("content", "주어진 텍스트를 문단으로 나누세요. 의미 있는 문장이 끝날 때만 줄바꿈(\n)을 추가하세요. 다른 설명이나 빈 문단은 포함하지 마세요.")
 
-            userMsg.put("role", "user")
-            userMsg.put("content", "$userInput\n위 문장을 문단으로 나누세요. 빈 문단은 포함하지 마세요.")
+                userMsg.put("role", "user")
+                userMsg.put("content", "텍스트:\n$userInput")
+            } catch (e: JSONException) {
+                Log.e("JSON Error", "프롬프트 생성 중 오류 발생", e)
+            }
+
 
             arr.put(baseAi)
             arr.put(userMsg)

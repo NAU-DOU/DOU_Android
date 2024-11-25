@@ -70,7 +70,7 @@
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/white"
             android:textAlignment="center"
-            android:textSize="20sp">
+            android:textSize="15sp">
         </TextView>
 
         <TextView
@@ -84,7 +84,7 @@
             android:fontFamily="@font/pretendardextrabold"
             android:textColor="@color/point_color"
             android:textAlignment="center"
-            android:textSize="20sp">
+            android:textSize="15sp">
         </TextView>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
